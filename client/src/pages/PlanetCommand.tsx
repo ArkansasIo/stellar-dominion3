@@ -10,6 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Box, Cpu, Database, Droplets, Factory, Gem, Globe, Moon, Orbit, Shield, TrendingUp, Users, Wheat, Zap } from "lucide-react";
 
+type MainMenu = "planet" | "moon" | "station";
+type PlanetSubMenu = "infrastructure" | "governance";
+type MoonSubMenu = "facilities" | "intel";
+type StationSubMenu = "modules" | "operations";
+
 interface PlanetSummary {
   id: string;
   name: string;
@@ -158,7 +163,10 @@ export default function PlanetCommand() {
   const { toast } = useToast();
 
   const [selectedPlanetId, setSelectedPlanetId] = useState<string>("");
-  const [mainMenu, setMainMenu] = useState<"planet" | "moon" | "station">("planet");
+  const [mainMenu, setMainMenu] = useState<MainMenu>("planet");
+  const [planetSubMenu, setPlanetSubMenu] = useState<PlanetSubMenu>("infrastructure");
+  const [moonSubMenu, setMoonSubMenu] = useState<MoonSubMenu>("facilities");
+  const [stationSubMenu, setStationSubMenu] = useState<StationSubMenu>("modules");
 
   const planetsQuery = useQuery<{ planets: PlanetSummary[] }>({
     queryKey: ["/api/planets"],
@@ -169,6 +177,47 @@ export default function PlanetCommand() {
       setSelectedPlanetId(planetsQuery.data.planets[0].id);
     }
   }, [selectedPlanetId, planetsQuery.data?.planets]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const menuParam = params.get("tab") || params.get("menu");
+    const subParam = params.get("sub");
+
+    if (menuParam === "planet" || menuParam === "moon" || menuParam === "station") {
+      setMainMenu(menuParam);
+
+      if (menuParam === "planet" && (subParam === "infrastructure" || subParam === "governance")) {
+        setPlanetSubMenu(subParam);
+      }
+
+      if (menuParam === "moon" && (subParam === "facilities" || subParam === "intel")) {
+        setMoonSubMenu(subParam);
+      }
+
+      if (menuParam === "station" && (subParam === "modules" || subParam === "operations")) {
+        setStationSubMenu(subParam);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const activeSub =
+      mainMenu === "planet" ? planetSubMenu :
+      mainMenu === "moon" ? moonSubMenu :
+      stationSubMenu;
+
+    params.set("tab", mainMenu);
+    params.delete("menu");
+    params.set("sub", activeSub);
+
+    const nextUrl = `/planet-command?${params.toString()}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }, [mainMenu, planetSubMenu, moonSubMenu, stationSubMenu]);
 
   const selectedPlanet = useMemo(
     () => planetsQuery.data?.planets?.find((planet) => planet.id === selectedPlanetId),
@@ -416,7 +465,7 @@ export default function PlanetCommand() {
           </CardContent>
         </Card>
 
-        <Tabs value={mainMenu} onValueChange={(value) => setMainMenu(value as "planet" | "moon" | "station")}> 
+        <Tabs value={mainMenu} onValueChange={(value) => setMainMenu(value as MainMenu)}>
           <TabsList className="grid grid-cols-3 w-full lg:w-[480px]">
             <TabsTrigger value="planet" data-testid="tab-menu-planet">
               <Globe className="w-4 h-4 mr-2" /> Planet
@@ -430,7 +479,7 @@ export default function PlanetCommand() {
           </TabsList>
 
           <TabsContent value="planet" className="space-y-4 mt-4">
-            <Tabs defaultValue="infrastructure">
+            <Tabs value={planetSubMenu} onValueChange={(value) => setPlanetSubMenu(value as PlanetSubMenu)}>
               <TabsList className="grid grid-cols-2 w-full lg:w-[360px]">
                 <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
                 <TabsTrigger value="governance">Governance</TabsTrigger>
@@ -516,7 +565,7 @@ export default function PlanetCommand() {
           </TabsContent>
 
           <TabsContent value="moon" className="space-y-4 mt-4">
-            <Tabs defaultValue="facilities">
+            <Tabs value={moonSubMenu} onValueChange={(value) => setMoonSubMenu(value as MoonSubMenu)}>
               <TabsList className="grid grid-cols-2 w-full lg:w-[360px]">
                 <TabsTrigger value="facilities">Facilities</TabsTrigger>
                 <TabsTrigger value="intel">Intel</TabsTrigger>
@@ -580,7 +629,7 @@ export default function PlanetCommand() {
           </TabsContent>
 
           <TabsContent value="station" className="space-y-4 mt-4">
-            <Tabs defaultValue="modules">
+            <Tabs value={stationSubMenu} onValueChange={(value) => setStationSubMenu(value as StationSubMenu)}>
               <TabsList className="grid grid-cols-2 w-full lg:w-[360px]">
                 <TabsTrigger value="modules">Modules</TabsTrigger>
                 <TabsTrigger value="operations">Operations</TabsTrigger>

@@ -13,12 +13,35 @@ import {
   Rocket, MapPin, Crosshair, Truck, Search, Play, Clock, AlertCircle, User, Anchor, 
   Zap, Skull, Disc, Target, Shield, Sword, TrendingUp, BarChart3, History, Info
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { unitData } from "@/lib/unitData";
 import { cn } from "@/lib/utils";
 
+type FleetTab = "dispatch" | "active" | "templates" | "combat";
+
 export default function Fleet() {
   const { units, activeMissions, dispatchFleet } = useGame();
+   const [activeTab, setActiveTab] = useState<FleetTab>("dispatch");
+
+   useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (tabParam === "dispatch" || tabParam === "active" || tabParam === "templates" || tabParam === "combat") {
+         setActiveTab(tabParam);
+      }
+   }, []);
+
+   useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      params.set("tab", activeTab);
+
+      const nextUrl = `/fleet?${params.toString()}`;
+      const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+      if (currentUrl !== nextUrl) {
+         window.history.replaceState(null, "", nextUrl);
+      }
+   }, [activeTab]);
   
   const [selectedUnits, setSelectedUnits] = useState<{[key: string]: number}>({});
   const [targetGalaxy, setTargetGalaxy] = useState("1");
@@ -173,7 +196,7 @@ export default function Fleet() {
           </Card>
         </div>
 
-        <Tabs defaultValue="dispatch" className="w-full">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as FleetTab)} className="w-full">
            <TabsList className="bg-white border border-slate-200 h-12 w-full justify-start">
               <TabsTrigger value="dispatch" className="font-orbitron" data-testid="tab-dispatch"><Rocket className="w-4 h-4 mr-2" /> Dispatch Fleet</TabsTrigger>
               <TabsTrigger value="active" className="font-orbitron" data-testid="tab-active">

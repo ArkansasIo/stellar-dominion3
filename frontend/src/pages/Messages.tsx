@@ -9,11 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Mail, Send, Trash2, Reply, AlertCircle, User, Shield, Flag, Skull, Crosshair, ArrowRightLeft, Check, X, RefreshCw, Box, Gem, Database, Clock, ArrowRight, History } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useGame } from "@/lib/gameContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+
+type MessagesMainTab = "messages" | "trades";
+type MessagesSubTab = "inbox" | "sent" | "compose";
+type TradesSubTab = "incoming" | "outgoing" | "history";
 
 interface TradeOffer {
   id: string;
@@ -381,12 +385,46 @@ function CreateTradeDialog({ onSuccess }: { onSuccess: () => void }) {
 
 export default function Messages() {
   const { messages, sendMessage, markMessageRead, deleteMessage } = useGame();
+  const [mainTab, setMainTab] = useState<MessagesMainTab>("messages");
+  const [messagesSubTab, setMessagesSubTab] = useState<MessagesSubTab>("inbox");
+  const [tradesSubTab, setTradesSubTab] = useState<TradesSubTab>("incoming");
   const [selectedMsg, setSelectedMsg] = useState<string | null>(null);
   const [composeTo, setComposeTo] = useState("");
   const [composeSubject, setComposeSubject] = useState("");
   const [composeBody, setComposeBody] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    const subParam = params.get("sub");
+
+    if (tabParam === "messages" || tabParam === "trades") {
+      setMainTab(tabParam);
+
+      if (tabParam === "messages" && (subParam === "inbox" || subParam === "sent" || subParam === "compose")) {
+        setMessagesSubTab(subParam);
+      }
+
+      if (tabParam === "trades" && (subParam === "incoming" || subParam === "outgoing" || subParam === "history")) {
+        setTradesSubTab(subParam);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", mainTab);
+    params.set("sub", mainTab === "messages" ? messagesSubTab : tradesSubTab);
+
+    const nextUrl = `/messages?${params.toString()}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }, [mainTab, messagesSubTab, tradesSubTab]);
 
   const inbox = messages.filter((m: any) => m.to === "Commander");
   const sent = messages.filter((m: any) => m.from === "Commander");
@@ -510,7 +548,7 @@ export default function Messages() {
           <p className="text-muted-foreground font-rajdhani text-lg">Encrypted messaging terminal & player trading.</p>
         </div>
 
-        <Tabs defaultValue="messages" className="w-full">
+        <Tabs value={mainTab} onValueChange={(value) => setMainTab(value as MessagesMainTab)} className="w-full">
           <TabsList className="bg-white border border-slate-200">
             <TabsTrigger value="messages" data-testid="tab-messages">
               <Mail className="w-4 h-4 mr-2" />
@@ -529,7 +567,7 @@ export default function Messages() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
               {/* Message List */}
               <Card className="bg-white border-slate-200 col-span-1 flex flex-col">
-                <Tabs defaultValue="inbox" className="flex-1 flex flex-col">
+                <Tabs value={messagesSubTab} onValueChange={(value) => setMessagesSubTab(value as MessagesSubTab)} className="flex-1 flex flex-col">
                    <div className="p-4 border-b border-slate-100">
                       <TabsList className="w-full grid grid-cols-3">
                          <TabsTrigger value="inbox">Inbox</TabsTrigger>
@@ -781,7 +819,7 @@ export default function Messages() {
               <CreateTradeDialog onSuccess={refreshTrades} />
             </div>
 
-            <Tabs defaultValue="incoming" className="w-full">
+            <Tabs value={tradesSubTab} onValueChange={(value) => setTradesSubTab(value as TradesSubTab)} className="w-full">
               <TabsList className="bg-slate-100">
                 <TabsTrigger value="incoming" data-testid="tab-incoming-trades">
                   Incoming

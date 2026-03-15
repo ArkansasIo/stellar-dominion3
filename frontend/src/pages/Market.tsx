@@ -17,9 +17,11 @@ import {
   ArrowUpDown, Clock, Coins, BarChart3, Gavel, Search, Plus, Timer, Tag,
   Package, Crown, Sparkles, X
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+
+type MarketTab = "market" | "auction" | "exchange" | "history" | "prices";
 
 const ItemCard = ({ 
   item, 
@@ -710,11 +712,32 @@ const mockPriceChanges = [
 
 export default function Market() {
   const { resources, inventory, buyItem, sellItem } = useGame();
+  const [activeTab, setActiveTab] = useState<MarketTab>("market");
   const [selectedVendorId, setSelectedVendorId] = useState(VENDORS[0].id);
   const [mode, setMode] = useState<"buy" | "sell">("buy");
   const [exchangeAmount, setExchangeAmount] = useState("1000");
   const [exchangeFrom, setExchangeFrom] = useState("metal");
   const [exchangeTo, setExchangeTo] = useState("crystal");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    if (tabParam === "market" || tabParam === "auction" || tabParam === "exchange" || tabParam === "history" || tabParam === "prices") {
+      setActiveTab(tabParam);
+    }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", activeTab);
+
+    const nextUrl = `/market?${params.toString()}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }, [activeTab]);
 
   const selectedVendor = VENDORS.find(v => v.id === selectedVendorId) || VENDORS[0];
   
@@ -810,7 +833,7 @@ export default function Market() {
           </Card>
         </div>
 
-        <Tabs defaultValue="market" className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MarketTab)} className="w-full">
            <TabsList className="bg-white border border-slate-200 h-12 w-full justify-start">
               <TabsTrigger value="market" className="font-orbitron" data-testid="tab-market"><ShoppingBag className="w-4 h-4 mr-2" /> Marketplace</TabsTrigger>
               <TabsTrigger value="auction" className="font-orbitron" data-testid="tab-auction"><Gavel className="w-4 h-4 mr-2" /> Auction House</TabsTrigger>

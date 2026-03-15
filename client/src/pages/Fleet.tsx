@@ -13,10 +13,12 @@ import {
   Rocket, MapPin, Crosshair, Truck, Search, Play, Clock, AlertCircle, User, Anchor, 
   Zap, Skull, Disc, Target, Shield, Sword, TrendingUp, BarChart3, History, Info
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { unitData } from "@/lib/unitData";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+
+type FleetTab = "dispatch" | "active" | "templates" | "combat";
 
 export default function Fleet() {
   const { units, activeMissions, dispatchFleet } = useGame();
@@ -25,8 +27,10 @@ export default function Fleet() {
    const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
    const initialMission = searchParams.get("mission");
    const initialTargetType = searchParams.get("targetType");
+   const initialTab = searchParams.get("tab");
    const allowedMissions = new Set(["attack", "transport", "espionage", "sabotage", "colonize", "deploy"]);
    const allowedTargetTypes = new Set(["planet", "debris", "moon"]);
+   const allowedTabs = new Set(["dispatch", "active", "templates", "combat"]);
   
   const [selectedUnits, setSelectedUnits] = useState<{[key: string]: number}>({});
    const [targetGalaxy, setTargetGalaxy] = useState(searchParams.get("g") ?? "1");
@@ -34,6 +38,19 @@ export default function Fleet() {
    const [targetPlanet, setTargetPlanet] = useState(searchParams.get("p") ?? "8");
    const [missionType, setMissionType] = useState<any>(allowedMissions.has(initialMission || "") ? (initialMission ?? "attack") : "attack");
    const [targetType, setTargetType] = useState(allowedTargetTypes.has(initialTargetType || "") ? (initialTargetType ?? "planet") : "planet");
+   const [activeTab, setActiveTab] = useState<FleetTab>(allowedTabs.has(initialTab || "") ? (initialTab as FleetTab) : "dispatch");
+
+   useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      params.set("tab", activeTab);
+
+      const nextUrl = `/fleet?${params.toString()}`;
+      const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+      if (currentUrl !== nextUrl) {
+         window.history.replaceState(null, "", nextUrl);
+      }
+   }, [activeTab]);
 
    const loadTemplate = (template: "attack" | "colony") => {
       if (template === "attack") {
@@ -205,7 +222,7 @@ export default function Fleet() {
           </Card>
         </div>
 
-        <Tabs defaultValue="dispatch" className="w-full">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as FleetTab)} className="w-full">
            <TabsList className="bg-white border border-slate-200 h-12 w-full justify-start">
               <TabsTrigger value="dispatch" className="font-orbitron" data-testid="tab-dispatch"><Rocket className="w-4 h-4 mr-2" /> Dispatch Fleet</TabsTrigger>
               <TabsTrigger value="active" className="font-orbitron" data-testid="tab-active">

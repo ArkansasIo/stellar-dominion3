@@ -8,9 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, Factory, Shield, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Domain = "troop" | "civilian" | "government" | "military";
+type ArmySubMenu = "training" | "field" | "construction";
 
 type UnitTemplate = {
   id: string;
@@ -95,8 +96,42 @@ export default function Army() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeDomain, setActiveDomain] = useState<Domain>("troop");
+  const [subMenuByDomain, setSubMenuByDomain] = useState<Record<Domain, ArmySubMenu>>({
+    troop: "training",
+    civilian: "training",
+    government: "training",
+    military: "training",
+  });
   const [trainingAmount, setTrainingAmount] = useState<Record<string, string>>({});
   const [constructionAmount, setConstructionAmount] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const domainParam = params.get("tab") || params.get("domain");
+    const subParam = params.get("sub");
+
+    if (domainParam === "troop" || domainParam === "civilian" || domainParam === "government" || domainParam === "military") {
+      setActiveDomain(domainParam);
+
+      if (subParam === "training" || subParam === "field" || subParam === "construction") {
+        setSubMenuByDomain((prev) => ({ ...prev, [domainParam]: subParam }));
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", activeDomain);
+    params.delete("domain");
+    params.set("sub", subMenuByDomain[activeDomain]);
+
+    const nextUrl = `/army?${params.toString()}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }, [activeDomain, subMenuByDomain]);
 
   const unitSystemQuery = useQuery<UnitSystemResponse>({
     queryKey: ["unit-system-state"],
@@ -217,7 +252,12 @@ export default function Army() {
 
           {(["troop", "civilian", "government", "military"] as Domain[]).map((domain) => (
             <TabsContent key={domain} value={domain} className="space-y-4 mt-4">
-              <Tabs defaultValue="training">
+              <Tabs
+                value={subMenuByDomain[domain]}
+                onValueChange={(value) =>
+                  setSubMenuByDomain((prev) => ({ ...prev, [domain]: value as ArmySubMenu }))
+                }
+              >
                 <TabsList className="grid w-full grid-cols-3 lg:w-[520px]">
                   <TabsTrigger value="training">Training</TabsTrigger>
                   <TabsTrigger value="field">Field</TabsTrigger>

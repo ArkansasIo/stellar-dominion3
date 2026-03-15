@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ORBITAL_BUILDINGS, StationBuilding } from "@/lib/stationData";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
+
+type FacilityBase = "planet" | "moon" | "station";
 
 const FacilityCard = ({ 
   id, 
@@ -148,6 +151,27 @@ const FacilityCard = ({
 
 export default function Facilities() {
   const { buildings, orbitalBuildings, resources, updateBuilding, queue, activeBase, setActiveBase, research } = useGame();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const baseParam = params.get("tab") || params.get("base");
+    if (baseParam === "planet" || baseParam === "moon" || baseParam === "station") {
+      setActiveBase(baseParam as FacilityBase);
+    }
+  }, [setActiveBase]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", activeBase);
+    params.delete("base");
+
+    const nextUrl = `/facilities?${params.toString()}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }, [activeBase]);
   
   const buildQueue = queue.filter(q => q.type === "building");
 
@@ -283,7 +307,7 @@ export default function Facilities() {
           </Card>
         )}
 
-        <Tabs defaultValue="planet" className="w-full" onValueChange={(v) => setActiveBase(v as any)}>
+        <Tabs value={activeBase} className="w-full" onValueChange={(v) => setActiveBase(v as FacilityBase)}>
           <TabsList className="bg-white border border-slate-200 h-14 w-full justify-start p-1 gap-2">
             <TabsTrigger value="planet" className="font-orbitron h-12 px-6 data-[state=active]:bg-slate-100 data-[state=active]:border-primary border-2 border-transparent" data-testid="tab-planet">
                <Globe className="w-5 h-5 mr-2 text-blue-500" /> Surface Command

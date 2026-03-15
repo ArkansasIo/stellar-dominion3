@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ORBITAL_BUILDINGS, StationBuilding } from "@/lib/stationData";
 import { Satellite, Moon, Building2, Clock, Box, Gem, Database, TrendingUp, Hammer } from "lucide-react";
+import { useEffect, useState } from "react";
+
+type StationsTab = "moon" | "station";
 
 function formatTime(seconds: number): string {
   if (seconds >= 86400) {
@@ -104,6 +107,27 @@ function BuildingCard({ building, level = 0 }: { building: StationBuilding; leve
 export default function Stations() {
   const moonBuildings = ORBITAL_BUILDINGS.filter(b => b.type === 'moon');
   const stationBuildings = ORBITAL_BUILDINGS.filter(b => b.type === 'station');
+  const [activeTab, setActiveTab] = useState<StationsTab>("moon");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    if (tabParam === "moon" || tabParam === "station") {
+      setActiveTab(tabParam);
+    }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", activeTab);
+
+    const nextUrl = `/stations?${params.toString()}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }, [activeTab]);
   
   return (
     <GameLayout>
@@ -140,7 +164,7 @@ export default function Stations() {
           </Card>
         </div>
 
-        <Tabs defaultValue="moon" className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as StationsTab)} className="w-full">
           <TabsList className="bg-white border border-slate-200">
             <TabsTrigger value="moon" data-testid="tab-moon-buildings">
               <Moon className="w-4 h-4 mr-2" />

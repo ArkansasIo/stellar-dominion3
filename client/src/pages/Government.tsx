@@ -13,6 +13,9 @@ import { GOVERNMENTS, POLICIES, GovernmentId } from "@/lib/governmentData";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, Gavel, Landmark, ShieldCheck, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+
+type GovernmentSubMenu = "cabinet" | "field" | "policies";
 
 type Leader = {
    id: string;
@@ -58,6 +61,28 @@ export default function Government() {
    const { government, setGovernmentType, togglePolicy, setTaxRate } = useGame();
    const { toast } = useToast();
    const queryClient = useQueryClient();
+   const [activeSubMenu, setActiveSubMenu] = useState<GovernmentSubMenu>("cabinet");
+
+   useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab") || params.get("sub");
+      if (tabParam === "cabinet" || tabParam === "field" || tabParam === "policies") {
+         setActiveSubMenu(tabParam);
+      }
+   }, []);
+
+   useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      params.set("tab", activeSubMenu);
+      params.delete("sub");
+
+      const nextUrl = `/government?${params.toString()}`;
+      const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+      if (currentUrl !== nextUrl) {
+         window.history.replaceState(null, "", nextUrl);
+      }
+   }, [activeSubMenu]);
 
    const leadersQuery = useQuery<LeadersResponse>({
       queryKey: ["government-leaders"],
@@ -183,7 +208,7 @@ export default function Government() {
                </Card>
             </div>
 
-            <Tabs defaultValue="cabinet">
+            <Tabs value={activeSubMenu} onValueChange={(value) => setActiveSubMenu(value as GovernmentSubMenu)}>
                <TabsList className="grid w-full grid-cols-3 lg:w-[520px]">
                   <TabsTrigger value="cabinet">Cabinet</TabsTrigger>
                   <TabsTrigger value="field">Field Doctrine</TabsTrigger>

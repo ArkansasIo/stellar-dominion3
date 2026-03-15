@@ -12,6 +12,9 @@ import {
   Building2, Users, Shield, ArrowLeft, Flag, Rocket, Factory
 } from "lucide-react";
 import { Link } from "wouter";
+import { useEffect, useState } from "react";
+
+type PlanetDetailTab = "overview" | "resources" | "buildings" | "defense";
 
 interface PlanetData {
   id: string;
@@ -46,6 +49,34 @@ export default function PlanetDetail() {
   const planetId = params?.id || "";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<PlanetDetailTab>("overview");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    if (tabParam === "overview" || tabParam === "resources" || tabParam === "buildings" || tabParam === "defense") {
+      setActiveTab(tabParam);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!planet) return;
+
+    if (!planet.colonized && (activeTab === "buildings" || activeTab === "defense")) {
+      setActiveTab("overview");
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", activeTab);
+
+    const nextUrl = `/planet/${planetId}?${params.toString()}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }, [activeTab, planet, planetId]);
 
   // Fetch planet details
   const { data: planet, isLoading } = useQuery<PlanetData>({
@@ -236,7 +267,7 @@ export default function PlanetDetail() {
           )}
         </div>
 
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as PlanetDetailTab)} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
