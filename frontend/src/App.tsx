@@ -66,6 +66,7 @@ const ResearchLab = lazy(() => import("@/pages/ResearchLab"));
 const GameAssetsGallery = lazy(() => import("@/pages/GameAssetsGallery"));
 const PlanetDetail = lazy(() => import("@/pages/PlanetDetail"));
 const OgameCompendium = lazy(() => import("@/pages/OgameCompendium"));
+const SolSystem = lazy(() => import("@/pages/SolSystem"));
 
 function LoadingSplash() {
   return (
@@ -224,6 +225,7 @@ function RouterContent() {
       <Route path="/research-lab" component={ResearchLab} />
       <Route path="/ogame-compendium" component={OgameCompendium} />
       <Route path="/assets-gallery" component={GameAssetsGallery} />
+      <Route path="/sol-system" component={SolSystem} />
       <Route path="/settings" component={Settings} />
       <Route path="/admin" component={Admin} />
       <Route path="/server-console" component={ServerConsole} />
