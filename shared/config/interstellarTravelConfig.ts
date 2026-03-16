@@ -311,6 +311,194 @@ export const WORMHOLES: Wormhole[] = [
 ];
 
 // ============================================================================
+// JUMPGATE DATA (Player-Built Network)
+// ============================================================================
+
+export const JUMPGATES: Jumpgate[] = [
+  {
+    id: 'jg-terran-1',
+    name: 'Terran Jumpgate Alpha',
+    location: { galaxy: 1, sector: 10, system: 50, x: 5000, y: 2000, z: 1000 },
+    ownedBy: 'player-terran-1',
+    faction: 'Terran Federation',
+    constructedDate: new Date('2024-01-15'),
+    diameter: 350,
+    energyOutput: 45000,
+    efficiency: 82,
+    level: 8,
+    tier: 2,
+    isActive: true,
+    underConstruction: false,
+    constructionProgress: 100,
+    maxTravelDistance: 150000,
+    travelTime: 3,
+    maxShipSize: 200000,
+    simultaneousJumps: 5,
+    linkedGates: ['jg-krell-1', 'jg-terran-2'],
+    networkName: 'Terran Jump Network',
+    maintenanceCost: { deuterium: 200, energy: 5000 },
+    shieldStrength: 50000,
+    defensiveWeapons: 10,
+    discoveredBy: 'Commander Reed',
+    lastActivatedBy: 'Admiral Chen',
+    lastActivationDate: new Date('2025-11-01'),
+    totalJumpsMade: 1250,
+    description: 'Primary Terran Federation jumpgate controlling inner core sector transit',
+  },
+
+  {
+    id: 'jg-terran-2',
+    name: 'Terran Jumpgate Beta',
+    location: { galaxy: 1, sector: 45, system: 120, x: 20000, y: 8000, z: 3000 },
+    ownedBy: 'player-terran-1',
+    faction: 'Terran Federation',
+    constructedDate: new Date('2024-06-20'),
+    diameter: 300,
+    energyOutput: 38000,
+    efficiency: 78,
+    level: 5,
+    tier: 1,
+    isActive: true,
+    underConstruction: false,
+    constructionProgress: 100,
+    maxTravelDistance: 100000,
+    travelTime: 4,
+    maxShipSize: 150000,
+    simultaneousJumps: 3,
+    linkedGates: ['jg-terran-1', 'jg-neutral-1'],
+    networkName: 'Terran Jump Network',
+    maintenanceCost: { deuterium: 150, energy: 3800 },
+    shieldStrength: 35000,
+    defensiveWeapons: 6,
+    discoveredBy: 'Exploration Fleet 7',
+    lastActivatedBy: 'Captain Torres',
+    lastActivationDate: new Date('2025-10-28'),
+    totalJumpsMade: 430,
+    description: 'Mid-range Terran jumpgate providing coverage for outer colony sectors',
+  },
+
+  {
+    id: 'jg-krell-1',
+    name: 'Krell Dominion Gate Sigma',
+    location: { galaxy: 1, sector: 80, system: 200, x: 35000, y: 15000, z: 8000 },
+    ownedBy: 'player-krell-1',
+    faction: 'Krell Dominion',
+    constructedDate: new Date('2023-09-05'),
+    diameter: 500,
+    energyOutput: 70000,
+    efficiency: 90,
+    level: 12,
+    tier: 3,
+    isActive: true,
+    underConstruction: false,
+    constructionProgress: 100,
+    maxTravelDistance: 300000,
+    travelTime: 2,
+    maxShipSize: 500000,
+    simultaneousJumps: 10,
+    linkedGates: ['jg-terran-1', 'jg-krell-2'],
+    networkName: 'Krell Dominion Network',
+    maintenanceCost: { deuterium: 500, energy: 12000 },
+    shieldStrength: 120000,
+    defensiveWeapons: 25,
+    discoveredBy: 'High Warlord Vex',
+    lastActivatedBy: 'Fleet Admiral Zyx',
+    lastActivationDate: new Date('2025-11-03'),
+    totalJumpsMade: 5800,
+    description: 'Heavily fortified Krell Dominion military jumpgate with rapid transit capability',
+  },
+
+  {
+    id: 'jg-krell-2',
+    name: 'Krell Dominion Gate Omega',
+    location: { galaxy: 1, sector: 150, system: 380, x: 60000, y: 30000, z: 15000 },
+    ownedBy: 'player-krell-1',
+    faction: 'Krell Dominion',
+    constructedDate: new Date('2023-12-01'),
+    diameter: 450,
+    energyOutput: 62000,
+    efficiency: 87,
+    level: 10,
+    tier: 3,
+    isActive: true,
+    underConstruction: false,
+    constructionProgress: 100,
+    maxTravelDistance: 250000,
+    travelTime: 3,
+    maxShipSize: 400000,
+    simultaneousJumps: 8,
+    linkedGates: ['jg-krell-1', 'jg-neutral-1'],
+    networkName: 'Krell Dominion Network',
+    maintenanceCost: { deuterium: 420, energy: 10000 },
+    shieldStrength: 100000,
+    defensiveWeapons: 20,
+    discoveredBy: 'High Warlord Vex',
+    lastActivatedBy: 'Commander Ryx',
+    lastActivationDate: new Date('2025-10-31'),
+    totalJumpsMade: 3200,
+    description: 'Outer-rim Krell Dominion gate securing frontier territories and expansion routes',
+  },
+
+  {
+    id: 'jg-neutral-1',
+    name: 'Neutral Zone Waygate',
+    location: { galaxy: 1, sector: 100, system: 250, x: 48000, y: 20000, z: 10000 },
+    ownedBy: 'faction-neutral',
+    faction: 'Neutral Consortium',
+    constructedDate: new Date('2022-03-10'),
+    diameter: 200,
+    energyOutput: 25000,
+    efficiency: 70,
+    level: 4,
+    tier: 1,
+    isActive: true,
+    underConstruction: false,
+    constructionProgress: 100,
+    maxTravelDistance: 80000,
+    travelTime: 5,
+    maxShipSize: 100000,
+    simultaneousJumps: 2,
+    linkedGates: ['jg-terran-2', 'jg-krell-2'],
+    networkName: 'Neutral Consortium Waypoints',
+    maintenanceCost: { deuterium: 80, energy: 2000 },
+    shieldStrength: 15000,
+    defensiveWeapons: 3,
+    discoveredBy: 'Independent Traders',
+    totalJumpsMade: 720,
+    description: 'Civilian-operated transit gate at the crossroads of Terran and Krell space',
+  },
+
+  {
+    id: 'jg-frontier-1',
+    name: 'Frontier Jumpgate Zeta',
+    location: { galaxy: 2, sector: 5, system: 10, x: 500, y: 500, z: 200 },
+    ownedBy: 'faction-explorer',
+    faction: 'Explorer League',
+    constructedDate: new Date('2025-02-14'),
+    diameter: 180,
+    energyOutput: 20000,
+    efficiency: 65,
+    level: 2,
+    tier: 1,
+    isActive: true,
+    underConstruction: false,
+    constructionProgress: 100,
+    maxTravelDistance: 50000,
+    travelTime: 6,
+    maxShipSize: 80000,
+    simultaneousJumps: 1,
+    linkedGates: [],
+    networkName: 'Explorer League Network',
+    maintenanceCost: { deuterium: 50, energy: 1500 },
+    shieldStrength: 8000,
+    defensiveWeapons: 1,
+    discoveredBy: 'Scout Ship Horizon',
+    totalJumpsMade: 45,
+    description: 'Newly constructed gateway into Galaxy 2 — the frontier of known space',
+  },
+];
+
+// ============================================================================
 // FTL DRIVE SYSTEM (Technology-Based)
 // ============================================================================
 
@@ -576,4 +764,40 @@ export function getFTLDrivesByTechLevel(minTech: number): FTLDrive[] {
   return FTL_DRIVES.filter(d => d.techLevelRequired <= minTech).sort((a, b) => 
     b.techLevelRequired - a.techLevelRequired
   );
+}
+
+// ============================================================================
+// JUMPGATE UTILITIES
+// ============================================================================
+
+export function getJumpgate(id: string): Jumpgate | undefined {
+  return JUMPGATES.find(g => g.id === id);
+}
+
+export function getAllJumpgates(): Jumpgate[] {
+  return JUMPGATES;
+}
+
+export function getActiveJumpgates(): Jumpgate[] {
+  return JUMPGATES.filter(g => g.isActive && !g.underConstruction);
+}
+
+export function getJumpgatesByNetwork(networkName: string): Jumpgate[] {
+  return JUMPGATES.filter(g => g.networkName === networkName);
+}
+
+export function getJumpgatesByOwner(ownerId: string): Jumpgate[] {
+  return JUMPGATES.filter(g => g.ownedBy === ownerId);
+}
+
+export function getJumpgatesByFaction(faction: string): Jumpgate[] {
+  return JUMPGATES.filter(g => g.faction === faction);
+}
+
+export function getLinkedJumpgates(gateId: string): Jumpgate[] {
+  const gate = getJumpgate(gateId);
+  if (!gate) return [];
+  return gate.linkedGates
+    .map(id => getJumpgate(id))
+    .filter((g): g is Jumpgate => g !== undefined);
 }

@@ -1,14 +1,16 @@
 import GameLayout from "@/components/layout/GameLayout";
 import { useGame } from "@/lib/gameContext";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Rocket, Disc, CircleDot, Zap, MapPin, Navigation, AlertTriangle, Orbit, Database } from "lucide-react";
+import { Rocket, Disc, CircleDot, Zap, MapPin, Navigation, AlertTriangle, Orbit, Database, Wind, Link2, Clock, Shield } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { DESTINATIONS, Destination } from "@/lib/interstellarData";
+import { JUMPGATES, WORMHOLES } from "@shared/config";
 import { cn } from "@/lib/utils";
 
 export default function Interstellar() {
@@ -79,7 +81,7 @@ export default function Interstellar() {
         </div>
 
         <Tabs defaultValue="gallery" className="w-full">
-           <TabsList className="grid w-full grid-cols-4 bg-white border border-slate-200 h-16">
+           <TabsList className="grid w-full grid-cols-5 bg-white border border-slate-200 h-16">
               <TabsTrigger value="gallery" className="font-orbitron flex flex-col items-center justify-center h-full gap-1">
                  <Disc className="w-4 h-4" /> Gallery
               </TabsTrigger>
@@ -88,6 +90,9 @@ export default function Interstellar() {
               </TabsTrigger>
               <TabsTrigger value="jumpgate" className="font-orbitron flex flex-col items-center justify-center h-full gap-1">
                  <Orbit className="w-4 h-4" /> Jump Gates
+              </TabsTrigger>
+              <TabsTrigger value="wormhole" className="font-orbitron flex flex-col items-center justify-center h-full gap-1">
+                 <Wind className="w-4 h-4" /> Wormholes
               </TabsTrigger>
               <TabsTrigger value="stargate" className="font-orbitron flex flex-col items-center justify-center h-full gap-1">
                  <CircleDot className="w-4 h-4" /> Stargate
@@ -246,22 +251,144 @@ export default function Interstellar() {
                     <CardTitle className="flex items-center gap-2">
                        <Orbit className="w-5 h-5 text-purple-600" /> Jump Gate Network
                     </CardTitle>
-                    <CardDescription>Instantaneous travel between owned gates. Cooldown applies.</CardDescription>
+                    <CardDescription>Player-built gates enabling rapid transit across the galaxy. Cooldown applies between uses.</CardDescription>
                  </CardHeader>
                  <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                       {DESTINATIONS.filter(d => d.type === "gate").map(gate => (
-                          <Button 
-                             key={gate.id}
-                             variant="outline" 
-                             className="h-24 flex flex-col items-start justify-center gap-1 border-slate-200 hover:border-purple-400 hover:bg-purple-50"
-                             onClick={() => handleGateJump(gate)}
-                             disabled={gate.coordinates === coordinates}
-                          >
-                             <div className="font-orbitron font-bold text-lg text-slate-900">{gate.name}</div>
-                             <div className="text-xs text-slate-500 font-mono">[{gate.coordinates}]</div>
-                             {gate.coordinates === coordinates && <div className="text-xs text-green-600 font-bold mt-1">CURRENT LOCATION</div>}
-                          </Button>
+                       {JUMPGATES.map(gate => (
+                          <div key={gate.id} className="border border-slate-200 rounded-lg p-4 space-y-3 bg-slate-50 hover:border-purple-400 hover:bg-purple-50/30 transition-all">
+                             <div className="flex items-start justify-between">
+                                <div>
+                                   <div className="font-orbitron font-bold text-slate-900">{gate.name}</div>
+                                   <div className="text-xs text-slate-500 font-mono mt-0.5">
+                                      Galaxy {gate.location.galaxy} · Sector {gate.location.sector} · System {gate.location.system}
+                                   </div>
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                   <Badge className={cn("text-xs", gate.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
+                                      {gate.isActive ? "Active" : "Offline"}
+                                   </Badge>
+                                   <Badge variant="outline" className="text-xs">Lv {gate.level} T{gate.tier}</Badge>
+                                </div>
+                             </div>
+                             <div className="text-xs text-slate-600 italic">{gate.description}</div>
+                             <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                                <div className="bg-white rounded border border-slate-200 p-2">
+                                   <Clock className="w-3 h-3 text-blue-600 mx-auto mb-1" />
+                                   <div className="text-slate-500">Travel Time</div>
+                                   <div className="font-bold">{gate.travelTime} turns</div>
+                                </div>
+                                <div className="bg-white rounded border border-slate-200 p-2">
+                                   <Link2 className="w-3 h-3 text-purple-600 mx-auto mb-1" />
+                                   <div className="text-slate-500">Linked Gates</div>
+                                   <div className="font-bold">{gate.linkedGates.length}</div>
+                                </div>
+                                <div className="bg-white rounded border border-slate-200 p-2">
+                                   <Shield className="w-3 h-3 text-slate-600 mx-auto mb-1" />
+                                   <div className="text-slate-500">Simultaneous</div>
+                                   <div className="font-bold">{gate.simultaneousJumps}</div>
+                                </div>
+                             </div>
+                             <div className="flex items-center justify-between text-xs text-slate-500">
+                                <span className="flex items-center gap-1">
+                                   <Zap className="w-3 h-3 text-yellow-600" />
+                                   {gate.maintenanceCost.deuterium} Deut / {gate.maintenanceCost.energy.toLocaleString()} E
+                                </span>
+                                <span className="text-slate-400">{gate.faction}</span>
+                             </div>
+                             <Button
+                                className="w-full h-9 font-orbitron text-xs bg-purple-600 hover:bg-purple-700"
+                                onClick={() => gate.linkedGates.length > 0 && travelTo(gate.name, `${gate.location.galaxy}:${gate.location.sector}:${gate.location.system}`, { deuterium: gate.maintenanceCost.deuterium })}
+                                disabled={!gate.isActive || gate.underConstruction || gate.linkedGates.length === 0}
+                             >
+                                <Navigation className="w-3 h-3 mr-2" />
+                                {gate.underConstruction ? "Under Construction" : gate.linkedGates.length === 0 ? "No Linked Gates" : "Initiate Jump"}
+                             </Button>
+                          </div>
+                       ))}
+                    </div>
+                 </CardContent>
+              </Card>
+           </TabsContent>
+
+           {/* Wormhole Tab */}
+           <TabsContent value="wormhole" className="mt-6">
+              <Card className="bg-white border-slate-200">
+                 <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                       <Wind className="w-5 h-5 text-cyan-600" /> Wormhole Network
+                    </CardTitle>
+                    <CardDescription>Natural spacetime anomalies enabling high-risk, high-reward transit between distant regions.</CardDescription>
+                 </CardHeader>
+                 <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       {WORMHOLES.map(wh => (
+                          <div key={wh.id} className={cn("border-2 rounded-lg p-4 space-y-3", wh.isStable ? "border-cyan-200 bg-cyan-50/20" : "border-orange-200 bg-orange-50/20")}>
+                             <div className="flex items-start justify-between">
+                                <div>
+                                   <div className="font-orbitron font-bold text-slate-900">{wh.name}</div>
+                                   <div className="text-xs text-slate-500 mt-0.5">
+                                      Galaxy {wh.entranceCoordinates.galaxy} · Sector {wh.entranceCoordinates.sector} → Galaxy {wh.exitCoordinates.galaxy} · Sector {wh.exitCoordinates.sector}
+                                   </div>
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                   <Badge className={cn("text-xs capitalize", wh.difficulty === "easy" ? "bg-green-100 text-green-700" : wh.difficulty === "moderate" ? "bg-yellow-100 text-yellow-700" : wh.difficulty === "hard" ? "bg-orange-100 text-orange-700" : "bg-red-100 text-red-700")}>
+                                      {wh.difficulty}
+                                   </Badge>
+                                   <Badge variant="outline" className={cn("text-xs", wh.isStable ? "border-cyan-400 text-cyan-700" : "border-orange-400 text-orange-700")}>
+                                      {wh.isStable ? "Stable" : "Unstable"}
+                                   </Badge>
+                                </div>
+                             </div>
+                             <div className="text-xs text-slate-600 italic">{wh.description}</div>
+                             <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                                <div className="bg-white rounded border border-slate-200 p-2">
+                                   <Clock className="w-3 h-3 text-blue-600 mx-auto mb-1" />
+                                   <div className="text-slate-500">Travel</div>
+                                   <div className="font-bold">{wh.travelTime}t</div>
+                                </div>
+                                <div className="bg-white rounded border border-slate-200 p-2">
+                                   <AlertTriangle className="w-3 h-3 text-red-500 mx-auto mb-1" />
+                                   <div className="text-slate-500">Casualties</div>
+                                   <div className="font-bold text-red-600">{wh.expectedCasualties}%</div>
+                                </div>
+                                <div className="bg-white rounded border border-slate-200 p-2">
+                                   <Wind className="w-3 h-3 text-cyan-600 mx-auto mb-1" />
+                                   <div className="text-slate-500">Stability</div>
+                                   <div className="font-bold">{wh.eventHorizonStability}%</div>
+                                </div>
+                                <div className="bg-white rounded border border-slate-200 p-2">
+                                   <Zap className="w-3 h-3 text-yellow-600 mx-auto mb-1" />
+                                   <div className="text-slate-500">Energy</div>
+                                   <div className="font-bold">{wh.energyRequirement}</div>
+                                </div>
+                             </div>
+                             {wh.seasonal && (
+                                <div className="text-xs bg-amber-50 border border-amber-200 rounded p-2 flex items-center gap-1 text-amber-700">
+                                   <AlertTriangle className="w-3 h-3" /> Seasonal access: turns {wh.seasonalWindow.start}–{wh.seasonalWindow.end}
+                                </div>
+                             )}
+                             {wh.dangers.length > 0 && (
+                                <div className="text-xs text-red-600 space-y-0.5">
+                                   <div className="font-semibold uppercase tracking-wide">Hazards:</div>
+                                   <div>{wh.dangers.join(" · ")}</div>
+                                </div>
+                             )}
+                             {wh.rewards && wh.rewards.length > 0 && (
+                                <div className="text-xs text-green-600 space-y-0.5">
+                                   <div className="font-semibold uppercase tracking-wide">Rewards:</div>
+                                   <div>{wh.rewards.join(" · ")}</div>
+                                </div>
+                             )}
+                             <Button
+                                className={cn("w-full h-9 font-orbitron text-xs", wh.isStable ? "bg-cyan-600 hover:bg-cyan-700" : "bg-orange-500 hover:bg-orange-600")}
+                                onClick={() => travelTo(wh.name, `${wh.exitCoordinates.galaxy}:${wh.exitCoordinates.sector}:${wh.exitCoordinates.system}`, { deuterium: wh.energyRequirement })}
+                                disabled={!wh.isNavigable}
+                             >
+                                <Wind className="w-3 h-3 mr-2" />
+                                {wh.isNavigable ? "Enter Wormhole" : "Not Navigable"}
+                             </Button>
+                          </div>
                        ))}
                     </div>
                  </CardContent>

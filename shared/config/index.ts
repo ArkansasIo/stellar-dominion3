@@ -238,6 +238,7 @@ export {
 // Interstellar Travel & Navigation Exports
 export {
   STARGATES,
+  JUMPGATES,
   FTL_DRIVES,
   WORMHOLES,
   calculateTravelTime,
@@ -251,6 +252,13 @@ export {
   getFTLDrive,
   getFTLDrivesByClass,
   getFTLDrivesByTechLevel,
+  getJumpgate,
+  getAllJumpgates,
+  getActiveJumpgates,
+  getJumpgatesByNetwork,
+  getJumpgatesByOwner,
+  getJumpgatesByFaction,
+  getLinkedJumpgates,
   type Coordinates,
   type TravelRoute,
   type Stargate,
