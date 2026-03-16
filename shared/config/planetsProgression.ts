@@ -92,6 +92,9 @@ export interface PlanetTypeConfig {
   buildableAreas: Array<'land' | 'ocean' | 'orbital' | 'underground' | 'aerial'>;
   dangers: string[];
   color: string;
+  foodProductionMultiplier: number;
+  waterProductionMultiplier: number;
+  populationCapacityMultiplier: number;
 }
 
 export const PLANET_TYPES: Record<PlanetType, PlanetTypeConfig> = {
@@ -118,6 +121,9 @@ export const PLANET_TYPES: Record<PlanetType, PlanetTypeConfig> = {
     buildableAreas: ['land', 'orbital', 'underground'],
     dangers: [],
     color: '#4A90E2',
+    foodProductionMultiplier: 1.0,
+    waterProductionMultiplier: 1.0,
+    populationCapacityMultiplier: 1.0,
   },
 
   'ocean': {
@@ -143,6 +149,9 @@ export const PLANET_TYPES: Record<PlanetType, PlanetTypeConfig> = {
     buildableAreas: ['ocean', 'orbital', 'underground'],
     dangers: ['tsunamis', 'storms'],
     color: '#3498DB',
+    foodProductionMultiplier: 1.4,
+    waterProductionMultiplier: 2.5,
+    populationCapacityMultiplier: 0.8,
   },
 
   'desert': {
@@ -168,6 +177,9 @@ export const PLANET_TYPES: Record<PlanetType, PlanetTypeConfig> = {
     buildableAreas: ['land', 'orbital', 'underground'],
     dangers: ['dust-storms', 'extreme-heat'],
     color: '#F4D03F',
+    foodProductionMultiplier: 0.5,
+    waterProductionMultiplier: 0.3,
+    populationCapacityMultiplier: 0.6,
   },
 
   'ice': {
@@ -193,6 +205,9 @@ export const PLANET_TYPES: Record<PlanetType, PlanetTypeConfig> = {
     buildableAreas: ['land', 'orbital', 'underground'],
     dangers: ['blizzards', 'extreme-cold'],
     color: '#ECF0F1',
+    foodProductionMultiplier: 0.4,
+    waterProductionMultiplier: 1.8,
+    populationCapacityMultiplier: 0.5,
   },
 
   'volcanic': {
@@ -218,6 +233,9 @@ export const PLANET_TYPES: Record<PlanetType, PlanetTypeConfig> = {
     buildableAreas: ['land', 'orbital', 'underground'],
     dangers: ['eruptions', 'lava-flows', 'extreme-heat'],
     color: '#E74C3C',
+    foodProductionMultiplier: 0.2,
+    waterProductionMultiplier: 0.1,
+    populationCapacityMultiplier: 0.3,
   },
 
   'toxic': {
@@ -243,6 +261,9 @@ export const PLANET_TYPES: Record<PlanetType, PlanetTypeConfig> = {
     buildableAreas: ['orbital', 'underground'],
     dangers: ['toxic-atmosphere', 'corrosive-rain', 'acid-seas'],
     color: '#27AE60',
+    foodProductionMultiplier: 0.1,
+    waterProductionMultiplier: 0.2,
+    populationCapacityMultiplier: 0.2,
   },
 
   'gas-giant': {
@@ -268,6 +289,9 @@ export const PLANET_TYPES: Record<PlanetType, PlanetTypeConfig> = {
     buildableAreas: ['orbital'],
     dangers: ['extreme-pressure', 'storms'],
     color: '#95A5A6',
+    foodProductionMultiplier: 0,
+    waterProductionMultiplier: 0,
+    populationCapacityMultiplier: 0,
   },
 
   'ice-giant': {
@@ -293,6 +317,9 @@ export const PLANET_TYPES: Record<PlanetType, PlanetTypeConfig> = {
     buildableAreas: ['orbital'],
     dangers: ['extreme-cold', 'storms'],
     color: '#3498DB',
+    foodProductionMultiplier: 0,
+    waterProductionMultiplier: 0,
+    populationCapacityMultiplier: 0,
   },
 
   'lava': {
@@ -318,6 +345,9 @@ export const PLANET_TYPES: Record<PlanetType, PlanetTypeConfig> = {
     buildableAreas: ['orbital', 'underground'],
     dangers: ['lava-flows', 'extreme-heat', 'radiation'],
     color: '#C0392B',
+    foodProductionMultiplier: 0.05,
+    waterProductionMultiplier: 0.05,
+    populationCapacityMultiplier: 0.15,
   },
 
   'exotic': {
@@ -343,6 +373,9 @@ export const PLANET_TYPES: Record<PlanetType, PlanetTypeConfig> = {
     buildableAreas: ['land', 'ocean', 'orbital', 'underground', 'aerial'],
     dangers: ['reality-distortion', 'exotic-anomalies'],
     color: '#9B59B6',
+    foodProductionMultiplier: 1.2,
+    waterProductionMultiplier: 1.5,
+    populationCapacityMultiplier: 1.3,
   },
 };
 
