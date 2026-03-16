@@ -1,6 +1,15 @@
 import { db } from "./db";
 import { playerStates } from "../shared/schema";
 import { eq } from "drizzle-orm";
+import {
+  SHIP_COMBAT_PROFILES,
+  PLANET_DEFENSE_PLATFORMS,
+  WEAPON_SYSTEMS,
+  classifyBattleReport,
+  getWeaponById,
+  getPlanetDefensePlatform,
+  type BattleReportMetadata,
+} from "../shared/config/weaponsAndDefenseConfig";
 
 // Combat configuration
 export const COMBAT_CONFIG = {
@@ -45,6 +54,10 @@ export interface CombatForce {
   units: { [key: string]: CombatUnit };
   research?: { [key: string]: number };
   bonusMultiplier?: number;
+  /** Planet defense platforms active on the defender's planet (platform type keys) */
+  planetDefenses?: string[];
+  /** Whether a mothership is part of this force */
+  hasMothership?: boolean;
 }
 
 export interface BattleResult {
@@ -55,6 +68,8 @@ export interface BattleResult {
   defenderCasualties: number;
   rounds: number;
   battleLog: string[];
+  /** Weapon & defense metadata for battle report */
+  reportMeta: BattleReportMetadata;
 }
 
 /**
@@ -208,6 +223,81 @@ export function simulateBattle(
   const battleLog: string[] = [];
   let round = 0;
 
+  // ---- Collect weapon weapon IDs from ship combat profiles ----
+  const collectWeaponIds = (force: CombatForce): string[] => {
+    const ids = new Set<string>();
+    for (const unitType of Object.keys(force.units)) {
+      const profile = SHIP_COMBAT_PROFILES.find((p) => p.shipType === unitType);
+      if (profile) {
+        profile.primaryWeapons.forEach((w) => ids.add(w));
+        profile.secondaryWeapons.forEach((w) => ids.add(w));
+      }
+    }
+    return Array.from(ids);
+  };
+
+  const attackerWeaponsUsed = collectWeaponIds(attackerForce);
+  const defenderWeaponsUsed = collectWeaponIds(defenderForce);
+
+  // ---- Collect planet defense weapon IDs ----
+  const planetDefensesEngaged: string[] = defenderForce.planetDefenses ?? [];
+  for (const platformType of planetDefensesEngaged) {
+    const platform = PLANET_DEFENSE_PLATFORMS.find((p) => p.platformType === platformType);
+    if (platform) {
+      platform.weapons.forEach((w) => {
+        if (!defenderWeaponsUsed.includes(w)) defenderWeaponsUsed.push(w);
+      });
+    }
+  }
+
+  // ---- Per-weapon damage accumulation ----
+  const weaponDamageBreakdown: Record<string, number> = {};
+  let shieldsStripped = 0;
+  let armorDamageDealt = 0;
+
+  const accumulateWeaponDamage = (weaponIds: string[], totalDamage: number) => {
+    if (weaponIds.length === 0) return;
+    const share = totalDamage / weaponIds.length;
+    for (const wId of weaponIds) {
+      weaponDamageBreakdown[wId] = (weaponDamageBreakdown[wId] ?? 0) + Math.ceil(share);
+      // Determine damage type split
+      const w = getWeaponById(wId);
+      if (w) {
+        if (w.damageType === "ionic") {
+          shieldsStripped += Math.ceil(share * (w.shieldPenetration + 0.5));
+        } else {
+          armorDamageDealt += Math.ceil(share * w.armorPenetration);
+        }
+      }
+    }
+  };
+
+  // ---- Add planet defense bonus to defender effective attack ----
+  let planetDefenseBonus = 0;
+  for (const platformType of planetDefensesEngaged) {
+    const platform = PLANET_DEFENSE_PLATFORMS.find((p) => p.platformType === platformType);
+    if (platform) {
+      // Each active defense platform adds base weapon damage
+      for (const wId of platform.weapons) {
+        const w = getWeaponById(wId);
+        if (w) planetDefenseBonus += w.baseDamage * w.rateOfFire;
+      }
+    }
+  }
+
+  // Detect mothership involvement
+  const mothershipEngaged =
+    (attackerForce.hasMothership ?? false) ||
+    (defenderForce.hasMothership ?? false) ||
+    Object.keys(attackerForce.units).some((t) =>
+      ["commandShip", "mobileFortress", "siegeShip", "flagCommand", "mobileHQ"].includes(t)
+    ) ||
+    Object.keys(defenderForce.units).some((t) =>
+      ["commandShip", "mobileFortress", "siegeShip", "flagCommand", "mobileHQ"].includes(t)
+    );
+
+  const planetaryShieldActive = planetDefensesEngaged.includes("shieldGenerator");
+
   // Deep copy to avoid mutating original
   const attacker = JSON.parse(JSON.stringify(attackerForce));
   const defender = JSON.parse(JSON.stringify(defenderForce));
@@ -227,39 +317,95 @@ export function simulateBattle(
 
     if (attackerUnitCount === 0) {
       battleLog.push("Battle ended: Attacker defeated!");
+      const attackerTotal = Object.values(attackerForce.units).reduce(
+        (sum: number, u: any) => sum + u.count,
+        0
+      );
+      const defenderTotal = Object.values(defenderForce.units).reduce(
+        (sum: number, u: any) => sum + u.count,
+        0
+      );
+      const defCasualties = defenderTotal - defenderUnitCount;
+      const classification = classifyBattleReport({
+        winner: "defender",
+        attackerTotalUnits: attackerTotal,
+        defenderTotalUnits: defenderTotal,
+        attackerCasualties: attackerTotal,
+        defenderCasualties: defCasualties,
+        missionType: "attack",
+        defenderHasPlanet: planetDefensesEngaged.length > 0,
+        defenderHasMoon: planetDefensesEngaged.includes("shieldGenerator"),
+        attackerHasMothership: mothershipEngaged,
+        defenderHasMothership: mothershipEngaged,
+        hasEspionageProbe: Boolean(attackerForce.units["espionageProbe"]?.count),
+      });
       return {
         winner: "defender",
         attackerUnits: attacker.units,
         defenderUnits: defender.units,
-        attackerCasualties: Object.values(attackerForce.units).reduce(
-          (sum: number, u: any) => sum + u.count,
-          0
-        ),
-        defenderCasualties: Object.values(defenderForce.units).reduce(
-          (sum: number, u: any) => sum + u.count,
-          0
-        ) - defenderUnitCount,
+        attackerCasualties: attackerTotal,
+        defenderCasualties: defCasualties,
         rounds: round,
         battleLog,
+        reportMeta: {
+          ...classification,
+          attackerWeaponsUsed,
+          defenderWeaponsUsed,
+          planetDefensesEngaged,
+          mothershipEngaged,
+          planetaryShieldActive,
+          shieldBreached: planetaryShieldActive && defCasualties === 0,
+          weaponDamageBreakdown,
+          shieldsStripped,
+          armorDamageDealt,
+        },
       };
     }
 
     if (defenderUnitCount === 0) {
       battleLog.push("Battle ended: Defender defeated!");
+      const attackerTotal = Object.values(attackerForce.units).reduce(
+        (sum: number, u: any) => sum + u.count,
+        0
+      );
+      const defenderTotal = Object.values(defenderForce.units).reduce(
+        (sum: number, u: any) => sum + u.count,
+        0
+      );
+      const atkCasualties = attackerTotal - attackerUnitCount;
+      const classification = classifyBattleReport({
+        winner: "attacker",
+        attackerTotalUnits: attackerTotal,
+        defenderTotalUnits: defenderTotal,
+        attackerCasualties: atkCasualties,
+        defenderCasualties: defenderTotal,
+        missionType: "attack",
+        defenderHasPlanet: planetDefensesEngaged.length > 0,
+        defenderHasMoon: planetDefensesEngaged.includes("shieldGenerator"),
+        attackerHasMothership: mothershipEngaged,
+        defenderHasMothership: mothershipEngaged,
+        hasEspionageProbe: Boolean(attackerForce.units["espionageProbe"]?.count),
+      });
       return {
         winner: "attacker",
         attackerUnits: attacker.units,
         defenderUnits: defender.units,
-        attackerCasualties: Object.values(attackerForce.units).reduce(
-          (sum: number, u: any) => sum + u.count,
-          0
-        ) - attackerUnitCount,
-        defenderCasualties: Object.values(defenderForce.units).reduce(
-          (sum: number, u: any) => sum + u.count,
-          0
-        ),
+        attackerCasualties: atkCasualties,
+        defenderCasualties: defenderTotal,
         rounds: round,
         battleLog,
+        reportMeta: {
+          ...classification,
+          attackerWeaponsUsed,
+          defenderWeaponsUsed,
+          planetDefensesEngaged,
+          mothershipEngaged,
+          planetaryShieldActive,
+          shieldBreached: planetaryShieldActive,
+          weaponDamageBreakdown,
+          shieldsStripped,
+          armorDamageDealt,
+        },
       };
     }
 
@@ -271,6 +417,12 @@ export function simulateBattle(
     );
 
     battleLog.push(log);
+
+    // Accumulate weapon damage for this round
+    const roundAttackerDmg = attackerLosses * 100;
+    const roundDefenderDmg = defenderLosses * 100 + planetDefenseBonus;
+    accumulateWeaponDamage(attackerWeaponsUsed, roundAttackerDmg);
+    accumulateWeaponDamage(defenderWeaponsUsed, roundDefenderDmg);
 
     // Apply casualties (remove from weakest units first)
     let remaining = attackerLosses;
@@ -292,20 +444,55 @@ export function simulateBattle(
 
   // If max rounds reached, attacker wins by default
   battleLog.push("Battle ended: Max rounds reached, attacker victorious!");
+  const attackerTotal = Object.values(attackerForce.units).reduce(
+    (sum: number, u: any) => sum + u.count,
+    0
+  );
+  const defenderTotal = Object.values(defenderForce.units).reduce(
+    (sum: number, u: any) => sum + u.count,
+    0
+  );
+  const finalAtkCasualties = attackerTotal - Object.values(attacker.units).reduce(
+    (sum: number, u: any) => sum + u.count,
+    0
+  );
+  const finalDefCasualties = defenderTotal - Object.values(defender.units).reduce(
+    (sum: number, u: any) => sum + u.count,
+    0
+  );
+  const classification = classifyBattleReport({
+    winner: "attacker",
+    attackerTotalUnits: attackerTotal,
+    defenderTotalUnits: defenderTotal,
+    attackerCasualties: finalAtkCasualties,
+    defenderCasualties: finalDefCasualties,
+    missionType: "attack",
+    defenderHasPlanet: planetDefensesEngaged.length > 0,
+    defenderHasMoon: planetDefensesEngaged.includes("shieldGenerator"),
+    attackerHasMothership: mothershipEngaged,
+    defenderHasMothership: mothershipEngaged,
+    hasEspionageProbe: Boolean(attackerForce.units["espionageProbe"]?.count),
+  });
   return {
     winner: "attacker",
     attackerUnits: attacker.units,
     defenderUnits: defender.units,
-    attackerCasualties: Object.values(attackerForce.units).reduce(
-      (sum: number, u: any) => sum + u.count,
-      0
-    ),
-    defenderCasualties: Object.values(defenderForce.units).reduce(
-      (sum: number, u: any) => sum + u.count,
-      0
-    ),
+    attackerCasualties: finalAtkCasualties,
+    defenderCasualties: finalDefCasualties,
     rounds: round,
     battleLog,
+    reportMeta: {
+      ...classification,
+      attackerWeaponsUsed,
+      defenderWeaponsUsed,
+      planetDefensesEngaged,
+      mothershipEngaged,
+      planetaryShieldActive,
+      shieldBreached: planetaryShieldActive,
+      weaponDamageBreakdown,
+      shieldsStripped,
+      armorDamageDealt,
+    },
   };
 }
 

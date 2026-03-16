@@ -439,3 +439,31 @@ export * as AutoBuyResourcesConfig from './autoBuyResourcesConfig';
 export * as ResearchTradingConfig from './researchTradingConfig';
 export * as UnitSystemsConfig from './unitSystemsConfig';
 export * as GovernmentLeadersConfig from './governmentLeadersConfig';
+export * as WeaponsAndDefenseConfig from './weaponsAndDefenseConfig';
+export {
+  WEAPON_SYSTEMS,
+  DEFENSE_SYSTEMS,
+  SHIP_COMBAT_PROFILES,
+  PLANET_DEFENSE_PLATFORMS,
+  classifyBattleReport,
+  getWeaponById,
+  getDefenseSystemById,
+  getWeaponsForPlatform,
+  getDefensesForPlatform,
+  getShipCombatProfile,
+  getPlanetDefensePlatform,
+} from './weaponsAndDefenseConfig';
+export type {
+  WeaponSystem,
+  DefenseSystem,
+  ShipCombatProfile,
+  PlanetDefenseProfile,
+  BattleReportMetadata,
+  BattleReportType,
+  BattleReportSubType,
+  BattleReportClass,
+  BattleReportSubClass,
+  DamageType,
+  WeaponMount,
+  ShieldType,
+} from './weaponsAndDefenseConfig';

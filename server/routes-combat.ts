@@ -5,6 +5,14 @@ import { desc, eq, inArray, or } from "drizzle-orm";
 import { simulateBattle, calculateVictoryResources } from "./combatEngine";
 import { isAuthenticated as authenticateRequest } from "./basicAuth";
 import type { Request, Response } from "express";
+import {
+  WEAPON_SYSTEMS,
+  DEFENSE_SYSTEMS,
+  SHIP_COMBAT_PROFILES,
+  PLANET_DEFENSE_PLATFORMS,
+  getWeaponsForPlatform,
+  getDefensesForPlatform,
+} from "../shared/config/weaponsAndDefenseConfig";
 
 function toUnitCountMap(units: Record<string, any>): Record<string, number> {
   return Object.entries(units || {}).reduce((acc, [unitType, value]) => {
@@ -163,6 +171,27 @@ export function registerCombatRoutes(app: Router) {
 
       // Simulate battle
       const defenderUnitsAtStart = toUnitCountMap(defender.units as Record<string, any>);
+
+      // Detect planet defenses on the defender's planet
+      const defenderBuildings = (defender.buildings as any) || {};
+      const activePlanetDefenses: string[] = [];
+      const knownPlatforms = [
+        "missileBattery", "laserTurretPlatform", "gaussCannonBattery",
+        "ionCannonBattery", "plasmaCannonBattery", "shieldGenerator",
+        "pointDefenseGrid", "massDriverStation", "mineField",
+        "interplanetaryMissileSilo",
+      ];
+      for (const platform of knownPlatforms) {
+        if ((defenderBuildings[platform] || 0) > 0) activePlanetDefenses.push(platform);
+      }
+
+      const attackerHasMothership = Object.keys(attackUnits || {}).some((t) =>
+        ["commandShip", "mobileFortress", "siegeShip", "flagCommand", "mobileHQ"].includes(t)
+      );
+      const defenderHasMothership = Object.keys(defender.units as object || {}).some((t) =>
+        ["commandShip", "mobileFortress", "siegeShip", "flagCommand", "mobileHQ"].includes(t)
+      );
+
       const battleResult = simulateBattle(
         {
           units: Object.entries(attackUnits || {}).reduce((acc, [type, count]) => {
@@ -171,6 +200,7 @@ export function registerCombatRoutes(app: Router) {
           }, {} as any),
           research: attacker.research as any,
           bonusMultiplier: 1 + ((attacker.research as any)?.militaryTech || 0) * 0.02,
+          hasMothership: attackerHasMothership,
         },
         {
           units: Object.entries(defender.units || {}).reduce((acc, [type, count]) => {
@@ -179,6 +209,8 @@ export function registerCombatRoutes(app: Router) {
           }, {} as any),
           research: defender.research as any,
           bonusMultiplier: 1 + ((defender.research as any)?.defenseTech || 0) * 0.02,
+          planetDefenses: activePlanetDefenses,
+          hasMothership: defenderHasMothership,
         }
       );
 
@@ -264,6 +296,21 @@ export function registerCombatRoutes(app: Router) {
               crystal: Math.floor((plunder.deuterium || 0) * 0.05),
             },
             rounds: battleResult.rounds,
+            // Battle report classification
+            reportType: battleResult.reportMeta.reportType,
+            reportSubType: battleResult.reportMeta.reportSubType,
+            reportClass: battleResult.reportMeta.reportClass,
+            reportSubClass: battleResult.reportMeta.reportSubClass,
+            // Weapon & defense data
+            attackerWeaponsUsed: battleResult.reportMeta.attackerWeaponsUsed,
+            defenderWeaponsUsed: battleResult.reportMeta.defenderWeaponsUsed,
+            planetDefensesEngaged: battleResult.reportMeta.planetDefensesEngaged,
+            weaponDamageBreakdown: battleResult.reportMeta.weaponDamageBreakdown,
+            shieldsStripped: battleResult.reportMeta.shieldsStripped,
+            armorDamageDealt: battleResult.reportMeta.armorDamageDealt,
+            mothershipEngaged: battleResult.reportMeta.mothershipEngaged,
+            planetaryShieldActive: battleResult.reportMeta.planetaryShieldActive,
+            shieldBreached: battleResult.reportMeta.shieldBreached,
             completedAt: new Date(),
           })
           .returning();
@@ -273,6 +320,7 @@ export function registerCombatRoutes(app: Router) {
           winner: "attacker",
           battleId: battleRecord[0]?.id,
           battleResult,
+          reportMeta: battleResult.reportMeta,
           plunder,
           newAttackerUnits,
           newAttackerResources,
@@ -313,6 +361,21 @@ export function registerCombatRoutes(app: Router) {
               crystal: Math.floor((Object.values(defenderLosses).reduce((sum, value) => sum + value, 0)) * 5),
             },
             rounds: battleResult.rounds,
+            // Battle report classification
+            reportType: battleResult.reportMeta.reportType,
+            reportSubType: battleResult.reportMeta.reportSubType,
+            reportClass: battleResult.reportMeta.reportClass,
+            reportSubClass: battleResult.reportMeta.reportSubClass,
+            // Weapon & defense data
+            attackerWeaponsUsed: battleResult.reportMeta.attackerWeaponsUsed,
+            defenderWeaponsUsed: battleResult.reportMeta.defenderWeaponsUsed,
+            planetDefensesEngaged: battleResult.reportMeta.planetDefensesEngaged,
+            weaponDamageBreakdown: battleResult.reportMeta.weaponDamageBreakdown,
+            shieldsStripped: battleResult.reportMeta.shieldsStripped,
+            armorDamageDealt: battleResult.reportMeta.armorDamageDealt,
+            mothershipEngaged: battleResult.reportMeta.mothershipEngaged,
+            planetaryShieldActive: battleResult.reportMeta.planetaryShieldActive,
+            shieldBreached: battleResult.reportMeta.shieldBreached,
             completedAt: new Date(),
           })
           .returning();
@@ -322,6 +385,7 @@ export function registerCombatRoutes(app: Router) {
           winner: "defender",
           battleId: battleRecord[0]?.id,
           battleResult,
+          reportMeta: battleResult.reportMeta,
           plunder: { metal: 0, crystal: 0, deuterium: 0 },
           newAttackerUnits,
         });
@@ -480,6 +544,22 @@ export function registerCombatRoutes(app: Router) {
           coordinates: isAttacker ? battle.defenderCoordinates : battle.attackerCoordinates,
           battleType: battle.type,
           role: isAttacker ? "attacker" : "defender",
+          // Battle report classification
+          reportType: battle.reportType || "attack",
+          reportSubType: battle.reportSubType || "fleet_battle",
+          reportClass: battle.reportClass || "minor",
+          reportSubClass: battle.reportSubClass || "pitched_battle",
+          // Weapon & defense engagement data
+          attackerWeaponsUsed: (battle.attackerWeaponsUsed as string[] | null) || [],
+          defenderWeaponsUsed: (battle.defenderWeaponsUsed as string[] | null) || [],
+          planetDefensesEngaged: (battle.planetDefensesEngaged as string[] | null) || [],
+          mothershipEngaged: battle.mothershipEngaged ?? false,
+          planetaryShieldActive: battle.planetaryShieldActive ?? false,
+          shieldBreached: battle.shieldBreached ?? false,
+          shieldsStripped: battle.shieldsStripped ?? 0,
+          armorDamageDealt: battle.armorDamageDealt ?? 0,
+          weaponDamageBreakdown: (battle.weaponDamageBreakdown as Record<string, number> | null) || {},
+          debris: (battle.debris as Record<string, number> | null) || { metal: 0, crystal: 0 },
         };
       });
 
@@ -494,6 +574,75 @@ export function registerCombatRoutes(app: Router) {
     } catch (error) {
       console.error("[combat-history] Error:", error);
       res.status(500).json({ error: "Failed to get battle history" });
+    }
+  });
+
+  /**
+   * GET /api/combat/weapons
+   * Return all weapon system definitions for reference / UI display.
+   * Optional query params: platform=planet|starship|mothership, type=kinetic|energy|...
+   */
+  app.get("/api/combat/weapons", async (req: Request, res: Response) => {
+    try {
+      let result = [...WEAPON_SYSTEMS];
+      const platform = req.query.platform as string | undefined;
+      const damageType = req.query.type as string | undefined;
+      if (platform) {
+        result = result.filter((w) =>
+          w.compatibleWith.includes(platform as any)
+        );
+      }
+      if (damageType) {
+        result = result.filter((w) => w.damageType === damageType);
+      }
+      res.json({ weapons: result, total: result.length });
+    } catch (error) {
+      console.error("[combat-weapons] Error:", error);
+      res.status(500).json({ error: "Failed to get weapon systems" });
+    }
+  });
+
+  /**
+   * GET /api/combat/defenses
+   * Return all defense system definitions for reference / UI display.
+   * Optional query param: platform=planet|starship|mothership
+   */
+  app.get("/api/combat/defenses", async (req: Request, res: Response) => {
+    try {
+      let defSystems = [...DEFENSE_SYSTEMS];
+      let platforms = [...PLANET_DEFENSE_PLATFORMS];
+      const platform = req.query.platform as string | undefined;
+      if (platform) {
+        defSystems = getDefensesForPlatform(platform as any);
+        if (platform !== "planet") platforms = [];
+      }
+      res.json({
+        defenseSystems: defSystems,
+        planetPlatforms: platforms,
+        total: defSystems.length + platforms.length,
+      });
+    } catch (error) {
+      console.error("[combat-defenses] Error:", error);
+      res.status(500).json({ error: "Failed to get defense systems" });
+    }
+  });
+
+  /**
+   * GET /api/combat/ship-profiles
+   * Return all ship combat profiles (hull class, weapons, defenses).
+   * Optional query param: hullClass=fighter|escort|capital|support|recon|mothership
+   */
+  app.get("/api/combat/ship-profiles", async (req: Request, res: Response) => {
+    try {
+      let profiles = [...SHIP_COMBAT_PROFILES];
+      const hullClass = req.query.hullClass as string | undefined;
+      if (hullClass) {
+        profiles = profiles.filter((p) => p.hullClass === hullClass);
+      }
+      res.json({ profiles, total: profiles.length });
+    } catch (error) {
+      console.error("[combat-ship-profiles] Error:", error);
+      res.status(500).json({ error: "Failed to get ship profiles" });
     }
   });
 }

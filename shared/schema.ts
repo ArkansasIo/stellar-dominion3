@@ -525,7 +525,24 @@ export const battles = pgTable("battles", {
   debris: jsonb("debris"), // { metal, crystal }
   
   rounds: integer("rounds").default(0),
-  
+
+  // Battle Report Classification (OGame-style taxonomy)
+  reportType: varchar("report_type"),         // BattleReportType
+  reportSubType: varchar("report_sub_type"),  // BattleReportSubType
+  reportClass: varchar("report_class"),       // BattleReportClass
+  reportSubClass: varchar("report_sub_class"),// BattleReportSubClass
+
+  // Weapon & defense participation data
+  attackerWeaponsUsed: jsonb("attacker_weapons_used").default([]),    // string[] weapon IDs
+  defenderWeaponsUsed: jsonb("defender_weapons_used").default([]),    // string[] weapon IDs
+  planetDefensesEngaged: jsonb("planet_defenses_engaged").default([]),// string[] platform types
+  weaponDamageBreakdown: jsonb("weapon_damage_breakdown").default({}),// { weaponId: damage }
+  shieldsStripped: integer("shields_stripped").default(0),
+  armorDamageDealt: integer("armor_damage_dealt").default(0),
+  mothershipEngaged: boolean("mothership_engaged").default(false),
+  planetaryShieldActive: boolean("planetary_shield_active").default(false),
+  shieldBreached: boolean("shield_breached").default(false),
+
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
 });
