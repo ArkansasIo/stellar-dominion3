@@ -13,11 +13,15 @@ import {
   POPULATION_SYSTEM,
   FOOD_SYSTEM,
   WATER_SYSTEM,
+  FARMING_SYSTEM,
+  PLANET_LIFE_SUPPORT_MODIFIERS,
   computeResourcePressure,
   estimatePopulationGrowth,
   estimateFoodDemand,
   estimateWaterDemand,
+  computePlanetPopulationSnapshot,
   type PopulationClass,
+  type LifeSupportPlanetType as PlanetType,
 } from "../shared/config";
 
 function toNumber(value: unknown, fallback = 0): number {
@@ -115,6 +119,14 @@ export function registerLifeSupportRoutes(app: Express) {
     res.json({ success: true, waterSystem: WATER_SYSTEM });
   });
 
+  app.get("/api/config/farming-system", (_req: Request, res: Response) => {
+    res.json({ success: true, farmingSystem: FARMING_SYSTEM });
+  });
+
+  app.get("/api/config/planet-life-support-modifiers", (_req: Request, res: Response) => {
+    res.json({ success: true, modifiers: PLANET_LIFE_SUPPORT_MODIFIERS });
+  });
+
   app.get("/api/config/life-support-systems", (_req: Request, res: Response) => {
     res.json({
       success: true,
@@ -123,6 +135,8 @@ export function registerLifeSupportRoutes(app: Express) {
         population: POPULATION_SYSTEM,
         food: FOOD_SYSTEM,
         water: WATER_SYSTEM,
+        farming: FARMING_SYSTEM,
+        planetModifiers: PLANET_LIFE_SUPPORT_MODIFIERS,
       },
     });
   });
@@ -226,5 +240,84 @@ export function registerLifeSupportRoutes(app: Express) {
       console.error("[population/snapshot]", error);
       res.status(500).json({ success: false, message: "Failed to build population snapshot" });
     }
+  });
+
+  // Per-planet population/food/water snapshot
+  app.get("/api/planets/:planetType/population-snapshot", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = getUserId(req);
+      const state = await storage.getPlayerState(userId);
+      const resources = ((state?.resources || {}) as Record<string, number>);
+      const buildings = ((state?.buildings || {}) as Record<string, number>);
+
+      const rawPlanetType = req.params.planetType as string;
+      const validPlanetTypes: PlanetType[] = [
+        'terrestrial', 'ocean', 'desert', 'ice', 'volcanic', 'toxic',
+        'gas-giant', 'ice-giant', 'lava', 'exotic',
+      ];
+      const planetType: PlanetType = validPlanetTypes.includes(rawPlanetType as PlanetType)
+        ? (rawPlanetType as PlanetType)
+        : 'terrestrial';
+
+      const frameTier = getFrameTier(buildings);
+      const farmingTier = clamp(
+        1 + Math.floor((toNumber(buildings.farmCom, 0) + toNumber(buildings.hydropCom, 0)) / 4),
+        1,
+        FARMING_SYSTEM.tiers.length
+      );
+
+      const baseCapacity = POPULATION_SYSTEM.base.baseCapacity;
+      const housingCapacityFromBuildings =
+        toNumber(buildings.roboticsFactory, 0) * 250 +
+        toNumber(buildings.shipyard, 0) * 180 +
+        toNumber(buildings.researchLab, 0) * 120 +
+        toNumber(buildings.resCom, 0) * 50 +
+        toNumber(buildings.resRare, 0) * 200;
+      const basePopulationCapacity = baseCapacity + housingCapacityFromBuildings;
+
+      const explicitPopulation = toNumber((state as any)?.population, -1);
+      const currentPopulation = explicitPopulation > 0
+        ? explicitPopulation
+        : Math.floor(basePopulationCapacity * 0.58);
+
+      const foodStock = toNumber(resources.food, 0);
+      const waterStock = toNumber(resources.water, 0);
+
+      const snapshot = computePlanetPopulationSnapshot({
+        planetType,
+        currentPopulation,
+        basePopulationCapacity,
+        foodStock,
+        waterStock,
+        buildings,
+        frameTier,
+        farmingTier,
+      });
+
+      res.json({ success: true, snapshot });
+    } catch (error) {
+      console.error("[planets/:planetType/population-snapshot]", error);
+      res.status(500).json({ success: false, message: "Failed to build planet population snapshot" });
+    }
+  });
+
+  // Get food/water/population modifiers for a specific planet type
+  app.get("/api/planets/:planetType/life-support-config", (req: Request, res: Response) => {
+    const rawPlanetType = req.params.planetType as string;
+    const validPlanetTypes: PlanetType[] = [
+      'terrestrial', 'ocean', 'desert', 'ice', 'volcanic', 'toxic',
+      'gas-giant', 'ice-giant', 'lava', 'exotic',
+    ];
+    if (!validPlanetTypes.includes(rawPlanetType as PlanetType)) {
+      return res.status(400).json({ success: false, message: `Unknown planet type: ${rawPlanetType}` });
+    }
+    const planetType = rawPlanetType as PlanetType;
+    const modifiers = PLANET_LIFE_SUPPORT_MODIFIERS[planetType];
+    return res.json({
+      success: true,
+      planetType,
+      modifiers,
+      farmingSystem: FARMING_SYSTEM,
+    });
   });
 }

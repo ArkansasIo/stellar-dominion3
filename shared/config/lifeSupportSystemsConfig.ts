@@ -1,5 +1,6 @@
 export type PopulationClass = 'workers' | 'scientists' | 'engineers' | 'military' | 'administrators' | 'civilians';
 export type ResourcePressureState = 'surplus' | 'stable' | 'strained' | 'critical';
+export type PlanetType = 'terrestrial' | 'ocean' | 'desert' | 'ice' | 'volcanic' | 'toxic' | 'gas-giant' | 'ice-giant' | 'lava' | 'exotic';
 
 export interface FrameSystemTier {
   tier: number;
@@ -151,4 +152,294 @@ export function estimateWaterDemand(populationByClass: Partial<Record<Population
 
   const industrialDemand = Math.max(0, workerCount) * WATER_SYSTEM.consumption.industrialUsagePerWorkerPerHour;
   return domesticDemand + industrialDemand;
+}
+
+// ============================================================================
+// FARMING SYSTEM CONFIG
+// ============================================================================
+
+export interface FarmingTier {
+  tier: number;
+  name: string;
+  foodProductionMultiplier: number;
+  waterConsumptionPerFoodUnit: number;
+  workerEfficiencyBonus: number;
+  buildingRequirements: string[];
+}
+
+export const FARMING_SYSTEM = {
+  tiers: [
+    { tier: 1, name: 'Subsistence Farming', foodProductionMultiplier: 1.0, waterConsumptionPerFoodUnit: 1.5, workerEfficiencyBonus: 0, buildingRequirements: [] },
+    { tier: 2, name: 'Commercial Farming', foodProductionMultiplier: 1.6, waterConsumptionPerFoodUnit: 1.2, workerEfficiencyBonus: 0.05, buildingRequirements: ['farmCom'] },
+    { tier: 3, name: 'Industrial Farming', foodProductionMultiplier: 2.5, waterConsumptionPerFoodUnit: 1.0, workerEfficiencyBonus: 0.12, buildingRequirements: ['farmRare', 'hydropCom'] },
+    { tier: 4, name: 'Precision Agriculture', foodProductionMultiplier: 4.0, waterConsumptionPerFoodUnit: 0.75, workerEfficiencyBonus: 0.22, buildingRequirements: ['farmEpic', 'hydropRare'] },
+    { tier: 5, name: 'Quantum Agri-Network', foodProductionMultiplier: 7.0, waterConsumptionPerFoodUnit: 0.5, workerEfficiencyBonus: 0.40, buildingRequirements: ['farmMy', 'hydropMy'] },
+  ] as FarmingTier[],
+  research: {
+    baselineFoodBonus: 0,
+    perLevelBonus: 0.03,
+    perTierBonus: 0.15,
+    hydroponicsBonusMultiplier: 1.25,
+    agriDroneBonusMultiplier: 1.15,
+  },
+} as const;
+
+// ============================================================================
+// PLANET-SPECIFIC FOOD / WATER / POPULATION MODIFIERS
+// ============================================================================
+
+export interface PlanetLifeSupportModifiers {
+  foodProductionMultiplier: number;
+  waterProductionMultiplier: number;
+  populationCapacityMultiplier: number;
+  foodConsumptionMultiplier: number;
+  waterConsumptionMultiplier: number;
+  baseHabitabilityScore: number;
+}
+
+export const PLANET_LIFE_SUPPORT_MODIFIERS: Record<PlanetType, PlanetLifeSupportModifiers> = {
+  terrestrial: {
+    foodProductionMultiplier: 1.0,
+    waterProductionMultiplier: 1.0,
+    populationCapacityMultiplier: 1.0,
+    foodConsumptionMultiplier: 1.0,
+    waterConsumptionMultiplier: 1.0,
+    baseHabitabilityScore: 80,
+  },
+  ocean: {
+    foodProductionMultiplier: 1.4,
+    waterProductionMultiplier: 2.5,
+    populationCapacityMultiplier: 0.8,
+    foodConsumptionMultiplier: 0.9,
+    waterConsumptionMultiplier: 0.8,
+    baseHabitabilityScore: 75,
+  },
+  desert: {
+    foodProductionMultiplier: 0.5,
+    waterProductionMultiplier: 0.3,
+    populationCapacityMultiplier: 0.6,
+    foodConsumptionMultiplier: 1.1,
+    waterConsumptionMultiplier: 1.4,
+    baseHabitabilityScore: 40,
+  },
+  ice: {
+    foodProductionMultiplier: 0.4,
+    waterProductionMultiplier: 1.8,
+    populationCapacityMultiplier: 0.5,
+    foodConsumptionMultiplier: 1.2,
+    waterConsumptionMultiplier: 1.1,
+    baseHabitabilityScore: 30,
+  },
+  volcanic: {
+    foodProductionMultiplier: 0.2,
+    waterProductionMultiplier: 0.1,
+    populationCapacityMultiplier: 0.3,
+    foodConsumptionMultiplier: 1.3,
+    waterConsumptionMultiplier: 1.5,
+    baseHabitabilityScore: 20,
+  },
+  toxic: {
+    foodProductionMultiplier: 0.1,
+    waterProductionMultiplier: 0.2,
+    populationCapacityMultiplier: 0.2,
+    foodConsumptionMultiplier: 1.5,
+    waterConsumptionMultiplier: 1.6,
+    baseHabitabilityScore: 10,
+  },
+  'gas-giant': {
+    foodProductionMultiplier: 0,
+    waterProductionMultiplier: 0,
+    populationCapacityMultiplier: 0,
+    foodConsumptionMultiplier: 2.0,
+    waterConsumptionMultiplier: 2.0,
+    baseHabitabilityScore: 0,
+  },
+  'ice-giant': {
+    foodProductionMultiplier: 0,
+    waterProductionMultiplier: 0,
+    populationCapacityMultiplier: 0,
+    foodConsumptionMultiplier: 2.0,
+    waterConsumptionMultiplier: 2.0,
+    baseHabitabilityScore: 0,
+  },
+  lava: {
+    foodProductionMultiplier: 0.05,
+    waterProductionMultiplier: 0.05,
+    populationCapacityMultiplier: 0.15,
+    foodConsumptionMultiplier: 1.6,
+    waterConsumptionMultiplier: 1.8,
+    baseHabitabilityScore: 5,
+  },
+  exotic: {
+    foodProductionMultiplier: 1.2,
+    waterProductionMultiplier: 1.5,
+    populationCapacityMultiplier: 1.3,
+    foodConsumptionMultiplier: 0.8,
+    waterConsumptionMultiplier: 0.7,
+    baseHabitabilityScore: 50,
+  },
+};
+
+// ============================================================================
+// PER-PLANET POPULATION SNAPSHOT
+// ============================================================================
+
+export interface PlanetPopulationSnapshot {
+  planetType: PlanetType;
+  population: {
+    current: number;
+    capacity: number;
+    utilization: number;
+    happiness: number;
+    estimatedGrowthPerHour: number;
+    classes: Record<PopulationClass, number>;
+  };
+  food: {
+    stock: number;
+    productionPerHour: number;
+    demandPerHour: number;
+    netPerHour: number;
+    pressure: ResourcePressureState;
+    hoursToDepletion: number | null;
+    farmingTier: number;
+  };
+  water: {
+    stock: number;
+    productionPerHour: number;
+    demandPerHour: number;
+    netPerHour: number;
+    pressure: ResourcePressureState;
+    hoursToDepletion: number | null;
+  };
+  frameTier: number;
+  modifiers: PlanetLifeSupportModifiers;
+}
+
+/**
+ * Compute a full population/food/water snapshot for a specific planet.
+ */
+export function computePlanetPopulationSnapshot(params: {
+  planetType: PlanetType;
+  currentPopulation: number;
+  basePopulationCapacity: number;
+  foodStock: number;
+  waterStock: number;
+  buildings: Record<string, number>;
+  frameTier?: number;
+  farmingTier?: number;
+  researchBonuses?: { foodProduction?: number; waterProduction?: number };
+}): PlanetPopulationSnapshot {
+  const {
+    planetType,
+    currentPopulation,
+    basePopulationCapacity,
+    foodStock,
+    waterStock,
+    buildings,
+    frameTier = 1,
+    farmingTier = 1,
+    researchBonuses = {},
+  } = params;
+
+  const modifiers = PLANET_LIFE_SUPPORT_MODIFIERS[planetType];
+  const frameTierConfig = FRAME_SYSTEMS.tiers.find(t => t.tier === frameTier) ?? FRAME_SYSTEMS.tiers[0];
+  const farmingTierConfig = FARMING_SYSTEM.tiers.find(t => t.tier === farmingTier) ?? FARMING_SYSTEM.tiers[0];
+
+  // Population capacity adjusted for planet type
+  const populationCapacity = Math.floor(
+    basePopulationCapacity *
+    modifiers.populationCapacityMultiplier *
+    (1 + frameTierConfig.populationCapacityBonus)
+  );
+
+  const pop = Math.min(currentPopulation, populationCapacity);
+
+  // Population distribution
+  const populationByClass: Record<PopulationClass, number> = {
+    workers: Math.floor(pop * 0.42),
+    scientists: Math.floor(pop * 0.12),
+    engineers: Math.floor(pop * 0.14),
+    military: Math.floor(pop * 0.16),
+    administrators: Math.floor(pop * 0.08),
+    civilians: Math.max(0, pop - (
+      Math.floor(pop * 0.42) + Math.floor(pop * 0.12) +
+      Math.floor(pop * 0.14) + Math.floor(pop * 0.16) +
+      Math.floor(pop * 0.08)
+    )),
+  };
+  const workerCount = populationByClass.workers;
+
+  // Food demand (adjusted for planet consumption multiplier)
+  const rawFoodDemand = estimateFoodDemand(populationByClass);
+  const foodDemandPerHour = rawFoodDemand * modifiers.foodConsumptionMultiplier;
+
+  // Food production (adjusted for planet type + frame + farming tier + research)
+  const researchFoodBonus = researchBonuses.foodProduction ?? 0;
+  const foodProductionPerHour =
+    workerCount *
+    FOOD_SYSTEM.production.basePerWorkerPerHour *
+    modifiers.foodProductionMultiplier *
+    farmingTierConfig.foodProductionMultiplier *
+    (1 + frameTierConfig.foodEfficiencyBonus + researchFoodBonus);
+
+  // Water demand (adjusted for planet consumption multiplier)
+  const rawWaterDemand = estimateWaterDemand(populationByClass, workerCount);
+  const waterDemandPerHour = rawWaterDemand * modifiers.waterConsumptionMultiplier;
+
+  // Water production (adjusted for planet type + frame + research)
+  const researchWaterBonus = researchBonuses.waterProduction ?? 0;
+  const waterProductionPerHour =
+    workerCount *
+    WATER_SYSTEM.production.basePerWorkerPerHour *
+    modifiers.waterProductionMultiplier *
+    (1 + frameTierConfig.waterEfficiencyBonus + researchWaterBonus);
+
+  const foodPressure = computeResourcePressure(foodProductionPerHour, foodDemandPerHour);
+  const waterPressure = computeResourcePressure(waterProductionPerHour, waterDemandPerHour);
+
+  const happinessBase = 0.68;
+  const happinessPenalty =
+    (foodPressure === 'critical' ? 0.18 : foodPressure === 'strained' ? 0.08 : 0) +
+    (waterPressure === 'critical' ? 0.18 : waterPressure === 'strained' ? 0.08 : 0);
+  const happiness = Math.max(0.2, Math.min(0.98,
+    happinessBase + frameTierConfig.stabilityBonus + (modifiers.baseHabitabilityScore / 1000) - happinessPenalty
+  ));
+
+  const estimatedGrowthPerHour = estimatePopulationGrowth(pop, populationCapacity, happiness, frameTier);
+
+  const foodNetPerHour = foodProductionPerHour - foodDemandPerHour;
+  const waterNetPerHour = waterProductionPerHour - waterDemandPerHour;
+  const foodHoursToDepletion = foodNetPerHour < 0 ? Math.floor(foodStock / Math.abs(foodNetPerHour || 1)) : null;
+  const waterHoursToDepletion = waterNetPerHour < 0 ? Math.floor(waterStock / Math.abs(waterNetPerHour || 1)) : null;
+
+  return {
+    planetType,
+    population: {
+      current: pop,
+      capacity: populationCapacity,
+      utilization: Number((pop / Math.max(1, populationCapacity)).toFixed(3)),
+      happiness: Number(happiness.toFixed(3)),
+      estimatedGrowthPerHour,
+      classes: populationByClass,
+    },
+    food: {
+      stock: foodStock,
+      productionPerHour: Number(foodProductionPerHour.toFixed(2)),
+      demandPerHour: Number(foodDemandPerHour.toFixed(2)),
+      netPerHour: Number(foodNetPerHour.toFixed(2)),
+      pressure: foodPressure,
+      hoursToDepletion: foodHoursToDepletion,
+      farmingTier,
+    },
+    water: {
+      stock: waterStock,
+      productionPerHour: Number(waterProductionPerHour.toFixed(2)),
+      demandPerHour: Number(waterDemandPerHour.toFixed(2)),
+      netPerHour: Number(waterNetPerHour.toFixed(2)),
+      pressure: waterPressure,
+      hoursToDepletion: waterHoursToDepletion,
+    },
+    frameTier,
+    modifiers,
+  };
 }

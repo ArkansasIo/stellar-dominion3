@@ -189,6 +189,92 @@ export const SPECIAL_FACILITIES: Facility[] = [
   { id: "orbitalMy", name: "Mythic Orbital Nexus", description: "Ultimate space platform", type: "orbital", class: "mythic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 5000000, crystal: 3000000, deuterium: 1500000 }, time: 40, bonuses: { orbitModifier: 10.0 } },
 ];
 
+// FARMING FACILITIES (5 types x 5 classes = 25 variants)
+export const FARMING_FACILITIES: Facility[] = [
+  // Basic Farms (open-air agriculture)
+  { id: "farmCom", name: "Basic Farm", description: "Open-air crop cultivation for food production", type: "resource", class: "common", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 80, crystal: 20, deuterium: 0 }, time: 25, production: { energy: -5 }, bonuses: { foodProduction: 40 } },
+  { id: "farmRare", name: "Advanced Farm", description: "Rare precision-agriculture techniques", type: "resource", class: "rare", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 200, crystal: 60, deuterium: 20 }, time: 22, production: { energy: -8 }, bonuses: { foodProduction: 100 } },
+  { id: "farmEpic", name: "Precision Agri-Complex", description: "Epic automated farming complex", type: "resource", class: "epic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 600, crystal: 200, deuterium: 80 }, time: 18, production: { energy: -12 }, bonuses: { foodProduction: 250 } },
+  { id: "farmLeg", name: "Legendary Agri-Dome", description: "Legendary climate-controlled megafarm", type: "resource", class: "legendary", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 2000, crystal: 800, deuterium: 300 }, time: 14, production: { energy: -18 }, bonuses: { foodProduction: 600 } },
+  { id: "farmMy", name: "Mythic Agri-Nexus", description: "Ultimate planetary food production hub", type: "resource", class: "mythic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 6000, crystal: 3000, deuterium: 1200 }, time: 10, production: { energy: -25 }, bonuses: { foodProduction: 1500 } },
+
+  // Hydroponics (indoor soilless cultivation)
+  { id: "hydropCom", name: "Basic Hydroponics Bay", description: "Soilless water-based crop growth", type: "resource", class: "common", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 120, crystal: 60, deuterium: 0 }, time: 28, production: { energy: -8 }, bonuses: { foodProduction: 55, waterEfficiency: 0.05 } },
+  { id: "hydropRare", name: "Advanced Hydroponics Lab", description: "Rare nutrient-optimized hydroponics", type: "resource", class: "rare", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 300, crystal: 160, deuterium: 40 }, time: 24, production: { energy: -12 }, bonuses: { foodProduction: 140, waterEfficiency: 0.08 } },
+  { id: "hydropEpic", name: "Precision Hydroponics Tower", description: "Epic vertical hydroponic system", type: "resource", class: "epic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 900, crystal: 500, deuterium: 150 }, time: 20, production: { energy: -18 }, bonuses: { foodProduction: 350, waterEfficiency: 0.12 } },
+  { id: "hydropLeg", name: "Legendary Hydroponics Spire", description: "Legendary multi-level hydroponic megastructure", type: "resource", class: "legendary", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 3000, crystal: 1800, deuterium: 600 }, time: 15, production: { energy: -25 }, bonuses: { foodProduction: 850, waterEfficiency: 0.18 } },
+  { id: "hydropMy", name: "Mythic Hydroponics Nexus", description: "Ultimate hydroponic mega-complex", type: "resource", class: "mythic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 9000, crystal: 6000, deuterium: 2400 }, time: 10, production: { energy: -35 }, bonuses: { foodProduction: 2200, waterEfficiency: 0.25 } },
+
+  // Livestock Ranches
+  { id: "ranchCom", name: "Basic Livestock Ranch", description: "Animal husbandry for protein production", type: "resource", class: "common", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 100, crystal: 30, deuterium: 0 }, time: 30, production: { energy: -6 }, bonuses: { foodProduction: 35 }, requirements: { building: "farmCom" } },
+  { id: "ranchRare", name: "Advanced Ranch", description: "Rare selective-bred livestock facilities", type: "resource", class: "rare", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 250, crystal: 100, deuterium: 30 }, time: 26, production: { energy: -10 }, bonuses: { foodProduction: 90 }, requirements: { building: "farmRare" } },
+  { id: "ranchEpic", name: "Precision Biofarm", description: "Epic gene-optimised livestock production", type: "resource", class: "epic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 800, crystal: 350, deuterium: 120 }, time: 22, production: { energy: -15 }, bonuses: { foodProduction: 230 }, requirements: { building: "farmEpic" } },
+  { id: "ranchLeg", name: "Legendary Biofarm Complex", description: "Legendary synthetic biology farms", type: "resource", class: "legendary", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 2500, crystal: 1200, deuterium: 450 }, time: 17, production: { energy: -22 }, bonuses: { foodProduction: 560 }, requirements: { building: "farmLeg" } },
+  { id: "ranchMy", name: "Mythic Biofarm Nexus", description: "Ultimate synthetic protein megafactory", type: "resource", class: "mythic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 7500, crystal: 4000, deuterium: 1800 }, time: 12, production: { energy: -30 }, bonuses: { foodProduction: 1400 }, requirements: { building: "farmMy" } },
+
+  // Aquaculture Centers
+  { id: "aquaCom", name: "Basic Aquaculture Center", description: "Fish and aquatic crop cultivation", type: "resource", class: "common", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 90, crystal: 40, deuterium: 0 }, time: 27, production: { energy: -7 }, bonuses: { foodProduction: 30 } },
+  { id: "aquaRare", name: "Advanced Aquaculture Farm", description: "Rare high-yield marine cultivation", type: "resource", class: "rare", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 220, crystal: 110, deuterium: 35 }, time: 23, production: { energy: -11 }, bonuses: { foodProduction: 75 } },
+  { id: "aquaEpic", name: "Precision Aquatic Complex", description: "Epic controlled-environment aquaculture", type: "resource", class: "epic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 700, crystal: 380, deuterium: 130 }, time: 19, production: { energy: -16 }, bonuses: { foodProduction: 190 } },
+  { id: "aquaLeg", name: "Legendary Aqua-Dome", description: "Legendary underwater farming habitat", type: "resource", class: "legendary", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 2200, crystal: 1400, deuterium: 520 }, time: 16, production: { energy: -23 }, bonuses: { foodProduction: 460 } },
+  { id: "aquaMy", name: "Mythic Aqua-Nexus", description: "Ultimate planetary aquaculture system", type: "resource", class: "mythic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 6500, crystal: 4500, deuterium: 2000 }, time: 11, production: { energy: -32 }, bonuses: { foodProduction: 1200 } },
+
+  // Vertical Farms (space-efficient urban agriculture)
+  { id: "vertFarmCom", name: "Basic Vertical Farm", description: "Space-efficient stacked growing units", type: "resource", class: "common", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 150, crystal: 80, deuterium: 10 }, time: 26, production: { energy: -10 }, bonuses: { foodProduction: 60 }, requirements: { building: "resCom" } },
+  { id: "vertFarmRare", name: "Advanced Vertical Farm", description: "Rare AI-controlled urban farming", type: "resource", class: "rare", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 400, crystal: 220, deuterium: 50 }, time: 22, production: { energy: -15 }, bonuses: { foodProduction: 155 }, requirements: { building: "resRare" } },
+  { id: "vertFarmEpic", name: "Precision Vertical Tower", description: "Epic fully automated food production tower", type: "resource", class: "epic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 1200, crystal: 700, deuterium: 180 }, time: 18, production: { energy: -22 }, bonuses: { foodProduction: 390 }, requirements: { building: "resEpic" } },
+  { id: "vertFarmLeg", name: "Legendary Arcology Farm", description: "Legendary integrated living-farming tower", type: "resource", class: "legendary", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 4000, crystal: 2500, deuterium: 700 }, time: 13, production: { energy: -30 }, bonuses: { foodProduction: 950 }, requirements: { building: "resLeg" } },
+  { id: "vertFarmMy", name: "Mythic Arcology Nexus", description: "Ultimate self-sustaining city-farm megastructure", type: "resource", class: "mythic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 12000, crystal: 8000, deuterium: 3000 }, time: 9, production: { energy: -40 }, bonuses: { foodProduction: 2500 }, requirements: { building: "resMy" } },
+];
+
+// WATER MANAGEMENT FACILITIES (4 types x 5 classes = 20 variants)
+export const WATER_FACILITIES: Facility[] = [
+  // Water Purifiers
+  { id: "waterPurCom", name: "Basic Water Purifier", description: "Removes contaminants from raw water", type: "resource", class: "common", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 100, crystal: 50, deuterium: 0 }, time: 25, production: { energy: -8 }, bonuses: { waterProduction: 45 } },
+  { id: "waterPurRare", name: "Advanced Purification Plant", description: "Rare multi-stage water purification", type: "resource", class: "rare", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 280, crystal: 140, deuterium: 40 }, time: 22, production: { energy: -12 }, bonuses: { waterProduction: 115 } },
+  { id: "waterPurEpic", name: "Precision Purification Complex", description: "Epic molecular-level water treatment", type: "resource", class: "epic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 900, crystal: 500, deuterium: 160 }, time: 18, production: { energy: -18 }, bonuses: { waterProduction: 290 } },
+  { id: "waterPurLeg", name: "Legendary Purification Hub", description: "Legendary quantum-filtration system", type: "resource", class: "legendary", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 3000, crystal: 1800, deuterium: 600 }, time: 14, production: { energy: -26 }, bonuses: { waterProduction: 700 } },
+  { id: "waterPurMy", name: "Mythic Purification Nexus", description: "Ultimate planetary water purification system", type: "resource", class: "mythic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 9000, crystal: 6000, deuterium: 2400 }, time: 10, production: { energy: -36 }, bonuses: { waterProduction: 1800 } },
+
+  // Desalination Plants
+  { id: "desalCom", name: "Basic Desalination Plant", description: "Converts saline water to fresh water", type: "resource", class: "common", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 120, crystal: 40, deuterium: 0 }, time: 28, production: { energy: -10 }, bonuses: { waterProduction: 50 } },
+  { id: "desalRare", name: "Advanced Desalination Array", description: "Rare high-efficiency salt extraction", type: "resource", class: "rare", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 320, crystal: 120, deuterium: 45 }, time: 24, production: { energy: -14 }, bonuses: { waterProduction: 130 } },
+  { id: "desalEpic", name: "Precision Desalination Hub", description: "Epic reverse osmosis megaplant", type: "resource", class: "epic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 1000, crystal: 450, deuterium: 180 }, time: 20, production: { energy: -20 }, bonuses: { waterProduction: 320 } },
+  { id: "desalLeg", name: "Legendary Desalination Forge", description: "Legendary plasma-assisted desalination", type: "resource", class: "legendary", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 3500, crystal: 1600, deuterium: 650 }, time: 16, production: { energy: -28 }, bonuses: { waterProduction: 780 } },
+  { id: "desalMy", name: "Mythic Desalination Nexus", description: "Ultimate planetary ocean-to-fresh water system", type: "resource", class: "mythic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 10000, crystal: 5500, deuterium: 2600 }, time: 11, production: { energy: -40 }, bonuses: { waterProduction: 2000 } },
+
+  // Atmospheric Water Collectors
+  { id: "atmWaterCom", name: "Basic Atmospheric Collector", description: "Extracts water vapor from atmosphere", type: "resource", class: "common", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 80, crystal: 60, deuterium: 0 }, time: 22, production: { energy: -6 }, bonuses: { waterProduction: 30 } },
+  { id: "atmWaterRare", name: "Advanced Atmospheric Collector", description: "Rare expanded-surface collection mesh", type: "resource", class: "rare", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 220, crystal: 160, deuterium: 30 }, time: 19, production: { energy: -9 }, bonuses: { waterProduction: 75 } },
+  { id: "atmWaterEpic", name: "Precision Atmospheric Array", description: "Epic ionization-assisted water extraction", type: "resource", class: "epic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 700, crystal: 550, deuterium: 120 }, time: 16, production: { energy: -14 }, bonuses: { waterProduction: 190 } },
+  { id: "atmWaterLeg", name: "Legendary Atmospheric Hub", description: "Legendary orbital-enhanced vapor collection", type: "resource", class: "legendary", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 2500, crystal: 2000, deuterium: 480 }, time: 13, production: { energy: -20 }, bonuses: { waterProduction: 460 } },
+  { id: "atmWaterMy", name: "Mythic Atmospheric Nexus", description: "Ultimate planetary-scale water harvesting grid", type: "resource", class: "mythic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 7500, crystal: 6500, deuterium: 1900 }, time: 9, production: { energy: -28 }, bonuses: { waterProduction: 1200 } },
+
+  // Water Recyclers
+  { id: "waterRecCom", name: "Basic Water Recycler", description: "Reclaims and recycles grey water", type: "resource", class: "common", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 90, crystal: 45, deuterium: 0 }, time: 20, production: { energy: -5 }, bonuses: { waterProduction: 20, waterEfficiency: 0.03 } },
+  { id: "waterRecRare", name: "Advanced Water Recycling Plant", description: "Rare closed-loop water recovery system", type: "resource", class: "rare", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 240, crystal: 130, deuterium: 35 }, time: 18, production: { energy: -8 }, bonuses: { waterProduction: 50, waterEfficiency: 0.06 } },
+  { id: "waterRecEpic", name: "Precision Recycling Complex", description: "Epic nano-filtration water recovery", type: "resource", class: "epic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 750, crystal: 420, deuterium: 130 }, time: 15, production: { energy: -12 }, bonuses: { waterProduction: 130, waterEfficiency: 0.10 } },
+  { id: "waterRecLeg", name: "Legendary Recycling Hub", description: "Legendary zero-waste water system", type: "resource", class: "legendary", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 2600, crystal: 1500, deuterium: 500 }, time: 12, production: { energy: -17 }, bonuses: { waterProduction: 320, waterEfficiency: 0.15 } },
+  { id: "waterRecMy", name: "Mythic Recycling Nexus", description: "Ultimate molecular-reconstruction water system", type: "resource", class: "mythic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 8000, crystal: 5000, deuterium: 2000 }, time: 9, production: { energy: -24 }, bonuses: { waterProduction: 850, waterEfficiency: 0.22 } },
+];
+
+// FOOD & WATER STORAGE FACILITIES (2 types x 5 classes = 10 variants)
+export const FOOD_WATER_STORAGE_FACILITIES: Facility[] = [
+  // Cold Storage (food)
+  { id: "coldStorCom", name: "Basic Cold Storage", description: "Chilled food preservation vault", type: "storage", class: "common", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 200, crystal: 80, deuterium: 0 }, time: 20, production: { energy: -12 }, storage: 5000, bonuses: { foodStorage: 5000, spoilageReduction: 0.25 } },
+  { id: "coldStorRare", name: "Advanced Cold Vault", description: "Rare cryogenic food storage", type: "storage", class: "rare", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 600, crystal: 280, deuterium: 80 }, time: 17, production: { energy: -20 }, storage: 25000, bonuses: { foodStorage: 25000, spoilageReduction: 0.50 } },
+  { id: "coldStorEpic", name: "Precision Cryo-Depot", description: "Epic vacuum-sealed food preservation complex", type: "storage", class: "epic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 2000, crystal: 1000, deuterium: 350 }, time: 14, production: { energy: -30 }, storage: 100000, bonuses: { foodStorage: 100000, spoilageReduction: 0.70 } },
+  { id: "coldStorLeg", name: "Legendary Cryo-Fortress", description: "Legendary indefinite food preservation system", type: "storage", class: "legendary", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 7000, crystal: 4000, deuterium: 1500 }, time: 11, production: { energy: -45 }, storage: 500000, bonuses: { foodStorage: 500000, spoilageReduction: 0.85 } },
+  { id: "coldStorMy", name: "Mythic Cryo-Nexus", description: "Ultimate quantum-locked food storage grid", type: "storage", class: "mythic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 21000, crystal: 14000, deuterium: 6000 }, time: 8, production: { energy: -60 }, storage: 2500000, bonuses: { foodStorage: 2500000, spoilageReduction: 0.95 } },
+
+  // Water Reservoirs
+  { id: "waterResCom", name: "Basic Water Reservoir", description: "Open water storage tank", type: "storage", class: "common", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 150, crystal: 50, deuterium: 0 }, time: 18, production: { energy: -4 }, storage: 6000, bonuses: { waterStorage: 6000, leakageReduction: 0.20 } },
+  { id: "waterResRare", name: "Advanced Water Reservoir", description: "Rare sealed pressurized water storage", type: "storage", class: "rare", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 450, crystal: 200, deuterium: 60 }, time: 15, production: { energy: -7 }, storage: 30000, bonuses: { waterStorage: 30000, leakageReduction: 0.40 } },
+  { id: "waterResEpic", name: "Precision Water Depot", description: "Epic geologically-reinforced underground reservoir", type: "storage", class: "epic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 1500, crystal: 800, deuterium: 280 }, time: 12, production: { energy: -11 }, storage: 120000, bonuses: { waterStorage: 120000, leakageReduction: 0.60 } },
+  { id: "waterResLeg", name: "Legendary Aquifer Hub", description: "Legendary deep-planetary aquifer network", type: "storage", class: "legendary", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 5500, crystal: 3000, deuterium: 1100 }, time: 10, production: { energy: -16 }, storage: 600000, bonuses: { waterStorage: 600000, leakageReduction: 0.75 } },
+  { id: "waterResMy", name: "Mythic Aquifer Nexus", description: "Ultimate planet-core water containment system", type: "storage", class: "mythic", tier: 1, level: 1, progressionConfig: { tiers: { max: 99 }, levels: { max: 999 } }, cost: { metal: 16000, crystal: 10000, deuterium: 4500 }, time: 7, production: { energy: -22 }, storage: 3000000, bonuses: { waterStorage: 3000000, leakageReduction: 0.90 } },
+];
+
 // Combine all facilities
 export const ALL_FACILITIES: Facility[] = [
   ...RESOURCE_FACILITIES,
@@ -198,6 +284,9 @@ export const ALL_FACILITIES: Facility[] = [
   ...RESEARCH_FACILITIES,
   ...CIVILIAN_FACILITIES,
   ...SPECIAL_FACILITIES,
+  ...FARMING_FACILITIES,
+  ...WATER_FACILITIES,
+  ...FOOD_WATER_STORAGE_FACILITIES,
 ];
 
 // Helper function to get facilities by type and class
@@ -208,6 +297,16 @@ export function getFacilitiesByTypeAndClass(type: string, facilityClass: string)
 // Helper function to get all facilities of a type
 export function getFacilitiesByType(type: string): Facility[] {
   return ALL_FACILITIES.filter(f => f.type === type);
+}
+
+// Helper function to get farming facilities
+export function getFarmingFacilities(): Facility[] {
+  return FARMING_FACILITIES;
+}
+
+// Helper function to get water management facilities
+export function getWaterFacilities(): Facility[] {
+  return WATER_FACILITIES;
 }
 
 // Export facility statistics
@@ -222,5 +321,8 @@ export const FACILITY_STATS = {
     civilian: CIVILIAN_FACILITIES.length,
     special: SPECIAL_FACILITIES.length,
     orbital: 4, // Included in special
+    farming: FARMING_FACILITIES.length,
+    water: WATER_FACILITIES.length,
+    foodWaterStorage: FOOD_WATER_STORAGE_FACILITIES.length,
   },
 };
