@@ -112,6 +112,16 @@ export function computeResourcePressure(productionPerHour: number, consumptionPe
   return 'critical';
 }
 
+// Population class distribution weights. The first 5 classes sum to 0.92;
+// civilians receive the remainder (0.08) to ensure the total is always 1.0.
+const POP_CLASS_RATIOS = {
+  workers: 0.42,
+  scientists: 0.12,
+  engineers: 0.14,
+  military: 0.16,
+  administrators: 0.08,
+} as const;
+
 export function estimatePopulationGrowth(
   currentPopulation: number,
   capacity: number,
@@ -345,7 +355,9 @@ export function computePlanetPopulationSnapshot(params: {
   const frameTierConfig = FRAME_SYSTEMS.tiers.find(t => t.tier === frameTier) ?? FRAME_SYSTEMS.tiers[0];
   const farmingTierConfig = FARMING_SYSTEM.tiers.find(t => t.tier === farmingTier) ?? FARMING_SYSTEM.tiers[0];
 
-  // Population capacity adjusted for planet type
+  // Population capacity adjusted for planet type.
+  // Gas-giants and ice-giants have populationCapacityMultiplier=0 (uninhabitable surfaces),
+  // resulting in 0 capacity which is handled gracefully throughout.
   const populationCapacity = Math.floor(
     basePopulationCapacity *
     modifiers.populationCapacityMultiplier *
@@ -354,17 +366,17 @@ export function computePlanetPopulationSnapshot(params: {
 
   const pop = Math.min(currentPopulation, populationCapacity);
 
-  // Population distribution
+  // Population distribution using shared class ratios
   const populationByClass: Record<PopulationClass, number> = {
-    workers: Math.floor(pop * 0.42),
-    scientists: Math.floor(pop * 0.12),
-    engineers: Math.floor(pop * 0.14),
-    military: Math.floor(pop * 0.16),
-    administrators: Math.floor(pop * 0.08),
+    workers: Math.floor(pop * POP_CLASS_RATIOS.workers),
+    scientists: Math.floor(pop * POP_CLASS_RATIOS.scientists),
+    engineers: Math.floor(pop * POP_CLASS_RATIOS.engineers),
+    military: Math.floor(pop * POP_CLASS_RATIOS.military),
+    administrators: Math.floor(pop * POP_CLASS_RATIOS.administrators),
     civilians: Math.max(0, pop - (
-      Math.floor(pop * 0.42) + Math.floor(pop * 0.12) +
-      Math.floor(pop * 0.14) + Math.floor(pop * 0.16) +
-      Math.floor(pop * 0.08)
+      Math.floor(pop * POP_CLASS_RATIOS.workers) + Math.floor(pop * POP_CLASS_RATIOS.scientists) +
+      Math.floor(pop * POP_CLASS_RATIOS.engineers) + Math.floor(pop * POP_CLASS_RATIOS.military) +
+      Math.floor(pop * POP_CLASS_RATIOS.administrators)
     )),
   };
   const workerCount = populationByClass.workers;

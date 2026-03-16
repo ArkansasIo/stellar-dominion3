@@ -260,8 +260,17 @@ export function registerLifeSupportRoutes(app: Express) {
         : 'terrestrial';
 
       const frameTier = getFrameTier(buildings);
+      // Farming tier is inferred from the combined level of all farming facility types.
+      // Every 4 total farming building levels advances one farming tier (capped at 5).
+      // Supported buildings: farms, hydroponics, ranches, aquaculture centers, vertical farms.
+      const totalFarmingBuildings =
+        toNumber(buildings.farmCom, 0) + toNumber(buildings.farmRare, 0) +
+        toNumber(buildings.hydropCom, 0) + toNumber(buildings.hydropRare, 0) +
+        toNumber(buildings.ranchCom, 0) + toNumber(buildings.ranchRare, 0) +
+        toNumber(buildings.aquaCom, 0) + toNumber(buildings.aquaRare, 0) +
+        toNumber(buildings.vertFarmCom, 0) + toNumber(buildings.vertFarmRare, 0);
       const farmingTier = clamp(
-        1 + Math.floor((toNumber(buildings.farmCom, 0) + toNumber(buildings.hydropCom, 0)) / 4),
+        1 + Math.floor(totalFarmingBuildings / 4),
         1,
         FARMING_SYSTEM.tiers.length
       );
