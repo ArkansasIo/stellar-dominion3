@@ -47,6 +47,7 @@ import {
   Network,
   AlertTriangle,
   Image,
+  Star,
 } from "lucide-react";
 
 const SidebarItem = ({ href, icon: Icon, label, active, className, indent = false }: { href: string, icon: any, label: string, active: boolean, className?: string, indent?: boolean }) => (
@@ -268,6 +269,7 @@ export default function GameLayout({ children }: { children: React.ReactNode }) 
                 { href: "/interstellar", icon: Sparkles, label: "Interstellar" },
                 { href: "/galaxy", icon: Globe, label: "Galaxy Map" },
                 { href: "/universe", icon: Orbit, label: "Universe" },
+                { href: "/sol-system", icon: Star, label: "Sol System" },
                 { href: "/exploration", icon: Compass, label: "Exploration" },
                 { href: "/warp-network", icon: Network, label: "Warp Network" },
                 { href: "/celestial-browser", icon: CircleDot, label: "Celestial Browser" },
