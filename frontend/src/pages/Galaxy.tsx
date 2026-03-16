@@ -49,7 +49,13 @@ type SystemObject = {
 const POSITIONS_PER_PAGE_OPTIONS = [15, 25, 50, 75, 100] as const;
 type PositionsPerPage = (typeof POSITIONS_PER_PAGE_OPTIONS)[number];
 
-function seededRandom(seed: number): number {
+// Universe coordinate limits (matches universeConfig.ts: 256 galaxies, 64 sectors, 128 systems)
+const MAX_GALAXY = 256;
+const MAX_SECTOR = 64;  // 4 quadrants × 16 sectors each
+const MAX_SYSTEM = 500;
+
+/** Returns a deterministic float in [0, 1) from a numeric seed */
+function seededRandomFraction(seed: number): number {
   const x = Math.sin(seed + 1) * 10000;
   return x - Math.floor(x);
 }
@@ -68,9 +74,9 @@ export default function Galaxy() {
   const getSystemData = (pos: number): SystemObject => {
     const universeNum = universe.charCodeAt(universe.length - 1);
     const seed = universeNum * 1000000 + galaxy * 10000 + sector * 100 + system + pos;
-    const r = seededRandom(seed);
-    const r2 = seededRandom(seed + 9999);
-    const r3 = seededRandom(seed + 55555);
+    const r = seededRandomFraction(seed);
+    const r2 = seededRandomFraction(seed + 9999);
+    const r3 = seededRandomFraction(seed + 55555);
 
     const details = getPlanetDetails(seed);
 
@@ -196,7 +202,7 @@ export default function Galaxy() {
             <div className="flex items-center">
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setGalaxy(g => Math.max(1, g - 1))}><ChevronLeft className="w-4 h-4" /></Button>
               <Input className="w-14 h-8 text-center font-mono bg-slate-50 border-slate-200 text-slate-900" value={galaxy} onChange={(e) => setGalaxy(parseInt(e.target.value) || 1)} />
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setGalaxy(g => Math.min(256, g + 1))}><ChevronRight className="w-4 h-4" /></Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setGalaxy(g => Math.min(MAX_GALAXY, g + 1))}><ChevronRight className="w-4 h-4" /></Button>
             </div>
           </div>
 
@@ -206,7 +212,7 @@ export default function Galaxy() {
             <div className="flex items-center">
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSector(s => Math.max(1, s - 1))}><ChevronLeft className="w-4 h-4" /></Button>
               <Input className="w-14 h-8 text-center font-mono bg-slate-50 border-primary/30 text-primary font-bold" value={sector} onChange={(e) => setSector(parseInt(e.target.value) || 1)} />
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSector(s => Math.min(64, s + 1))}><ChevronRight className="w-4 h-4" /></Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSector(s => Math.min(MAX_SECTOR, s + 1))}><ChevronRight className="w-4 h-4" /></Button>
             </div>
           </div>
 
@@ -216,7 +222,7 @@ export default function Galaxy() {
             <div className="flex items-center">
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSystem(s => Math.max(1, s - 1))}><ChevronLeft className="w-4 h-4" /></Button>
               <Input className="w-16 h-8 text-center font-mono bg-slate-50 border-slate-200 text-slate-900" value={system} onChange={(e) => setSystem(parseInt(e.target.value) || 1)} />
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSystem(s => Math.min(500, s + 1))}><ChevronRight className="w-4 h-4" /></Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSystem(s => Math.min(MAX_SYSTEM, s + 1))}><ChevronRight className="w-4 h-4" /></Button>
             </div>
           </div>
 

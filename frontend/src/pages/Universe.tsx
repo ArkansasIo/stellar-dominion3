@@ -294,8 +294,8 @@ export default function Universe() {
           <p className="text-muted-foreground font-rajdhani text-lg">
             Navigate galaxies, quadrants, sectors, systems, and planets across the known universe.
             {selectedGalaxy && selectedSector && (
-              <span className="ml-2 font-mono text-primary font-bold">
-                [{selectedGalaxy.coordinates} → Q{selectedQuadrant} → {selectedSector.coordinates}]
+              <span className="ml-2 font-mono text-primary font-bold" aria-label={`${selectedGalaxy.name} to Quadrant ${selectedQuadrant} to ${selectedSector.name}`}>
+                [{selectedGalaxy.coordinates} &rsaquo; Q{selectedQuadrant} &rsaquo; {selectedSector.coordinates}]
               </span>
             )}
           </p>
