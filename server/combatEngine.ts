@@ -8,6 +8,7 @@ import {
   classifyBattleReport,
   getWeaponById,
   getPlanetDefensePlatform,
+  hasMothership as checkHasMothership,
   type BattleReportMetadata,
 } from "../shared/config/weaponsAndDefenseConfig";
 
@@ -58,6 +59,8 @@ export interface CombatForce {
   planetDefenses?: string[];
   /** Whether a mothership is part of this force */
   hasMothership?: boolean;
+  /** Whether the defender has an active moon base (used for report classification) */
+  hasMoon?: boolean;
 }
 
 export interface BattleResult {
@@ -260,14 +263,16 @@ export function simulateBattle(
     const share = totalDamage / weaponIds.length;
     for (const wId of weaponIds) {
       weaponDamageBreakdown[wId] = (weaponDamageBreakdown[wId] ?? 0) + Math.ceil(share);
-      // Determine damage type split
       const w = getWeaponById(wId);
       if (w) {
-        if (w.damageType === "ionic") {
-          shieldsStripped += Math.ceil(share * (w.shieldPenetration + 0.5));
-        } else {
-          armorDamageDealt += Math.ceil(share * w.armorPenetration);
-        }
+        // Shields absorb first (based on shieldPenetration inversely measuring what gets through)
+        // shieldsStripped = damage absorbed by shields = share × (1 - shieldPenetration)
+        // armorDamageDealt = damage that penetrates shields and hits armor = share × shieldPenetration × armorPenetration
+        // These are mutually exclusive layers: shield absorbs what it can, rest hits armor
+        const shieldAbsorbed = Math.ceil(share * (1 - w.shieldPenetration));
+        const armorHit = Math.ceil(share * w.shieldPenetration * w.armorPenetration);
+        shieldsStripped += shieldAbsorbed;
+        armorDamageDealt += armorHit;
       }
     }
   };
@@ -285,16 +290,12 @@ export function simulateBattle(
     }
   }
 
-  // Detect mothership involvement
+  // Detect mothership involvement using shared helper
   const mothershipEngaged =
     (attackerForce.hasMothership ?? false) ||
     (defenderForce.hasMothership ?? false) ||
-    Object.keys(attackerForce.units).some((t) =>
-      ["commandShip", "mobileFortress", "siegeShip", "flagCommand", "mobileHQ"].includes(t)
-    ) ||
-    Object.keys(defenderForce.units).some((t) =>
-      ["commandShip", "mobileFortress", "siegeShip", "flagCommand", "mobileHQ"].includes(t)
-    );
+    checkHasMothership(attackerForce.units) ||
+    checkHasMothership(defenderForce.units);
 
   const planetaryShieldActive = planetDefensesEngaged.includes("shieldGenerator");
 
@@ -334,7 +335,7 @@ export function simulateBattle(
         defenderCasualties: defCasualties,
         missionType: "attack",
         defenderHasPlanet: planetDefensesEngaged.length > 0,
-        defenderHasMoon: planetDefensesEngaged.includes("shieldGenerator"),
+        defenderHasMoon: defenderForce.hasMoon ?? false,
         attackerHasMothership: mothershipEngaged,
         defenderHasMothership: mothershipEngaged,
         hasEspionageProbe: Boolean(attackerForce.units["espionageProbe"]?.count),
@@ -354,7 +355,7 @@ export function simulateBattle(
           planetDefensesEngaged,
           mothershipEngaged,
           planetaryShieldActive,
-          shieldBreached: planetaryShieldActive && defCasualties === 0,
+          shieldBreached: planetaryShieldActive && defCasualties > 0,
           weaponDamageBreakdown,
           shieldsStripped,
           armorDamageDealt,
@@ -381,7 +382,7 @@ export function simulateBattle(
         defenderCasualties: defenderTotal,
         missionType: "attack",
         defenderHasPlanet: planetDefensesEngaged.length > 0,
-        defenderHasMoon: planetDefensesEngaged.includes("shieldGenerator"),
+        defenderHasMoon: defenderForce.hasMoon ?? false,
         attackerHasMothership: mothershipEngaged,
         defenderHasMothership: mothershipEngaged,
         hasEspionageProbe: Boolean(attackerForce.units["espionageProbe"]?.count),
@@ -468,7 +469,7 @@ export function simulateBattle(
     defenderCasualties: finalDefCasualties,
     missionType: "attack",
     defenderHasPlanet: planetDefensesEngaged.length > 0,
-    defenderHasMoon: planetDefensesEngaged.includes("shieldGenerator"),
+    defenderHasMoon: defenderForce.hasMoon ?? false,
     attackerHasMothership: mothershipEngaged,
     defenderHasMothership: mothershipEngaged,
     hasEspionageProbe: Boolean(attackerForce.units["espionageProbe"]?.count),

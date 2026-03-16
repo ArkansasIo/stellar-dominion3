@@ -12,6 +12,7 @@ import {
   PLANET_DEFENSE_PLATFORMS,
   getWeaponsForPlatform,
   getDefensesForPlatform,
+  hasMothership,
 } from "../shared/config/weaponsAndDefenseConfig";
 
 function toUnitCountMap(units: Record<string, any>): Record<string, number> {
@@ -185,12 +186,8 @@ export function registerCombatRoutes(app: Router) {
         if ((defenderBuildings[platform] || 0) > 0) activePlanetDefenses.push(platform);
       }
 
-      const attackerHasMothership = Object.keys(attackUnits || {}).some((t) =>
-        ["commandShip", "mobileFortress", "siegeShip", "flagCommand", "mobileHQ"].includes(t)
-      );
-      const defenderHasMothership = Object.keys(defender.units as object || {}).some((t) =>
-        ["commandShip", "mobileFortress", "siegeShip", "flagCommand", "mobileHQ"].includes(t)
-      );
+      const attackerHasMothership = hasMothership(attackUnits || {});
+      const defenderHasMothership = hasMothership(defender.units as Record<string, any> || {});
 
       const battleResult = simulateBattle(
         {

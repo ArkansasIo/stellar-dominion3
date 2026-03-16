@@ -594,6 +594,50 @@ export const WEAPON_SYSTEMS: WeaponSystem[] = [
     prerequisites: { roboticsTech: 4, weaponsTech: 3 },
     compatibleWith: ["starship", "mothership"],
   },
+
+  // -------------------------------------------------------------------------
+  // Nanite weapons
+  // -------------------------------------------------------------------------
+  {
+    id: "naniteSwarmLauncher",
+    name: "Nanite Swarm Launcher",
+    description: "Releases self-replicating nanite clouds that consume hull material.",
+    damageType: "nanite",
+    mount: "missile_bay",
+    baseDamage: 180,
+    rateOfFire: 1,
+    accuracy: 72,
+    range: "medium",
+    shieldPenetration: 0.05,
+    armorPenetration: 0.7,
+    critChance: 8,
+    critMultiplier: 2.0,
+    buildCost: { metal: 3000, crystal: 2500, deuterium: 800 },
+    prerequisites: { roboticsTech: 8, weaponsTech: 7 },
+    compatibleWith: ["mothership"],
+  },
+
+  // -------------------------------------------------------------------------
+  // Psionic weapons (rare alien-derived technology)
+  // -------------------------------------------------------------------------
+  {
+    id: "psionicDisruptor",
+    name: "Psionic Disruptor",
+    description: "Alien-derived weapon that disrupts crew cognition and ship systems simultaneously.",
+    damageType: "psionic",
+    mount: "spinal",
+    baseDamage: 300,
+    rateOfFire: 1,
+    accuracy: 65,
+    range: "long",
+    shieldPenetration: 0.5,
+    armorPenetration: 0.2,
+    critChance: 15,
+    critMultiplier: 2.5,
+    buildCost: { metal: 5000, crystal: 8000, deuterium: 3000 },
+    prerequisites: { psionicTech: 1, weaponsTech: 9 },
+    compatibleWith: ["mothership"],
+  },
 ];
 
 // ===========================================================================
@@ -1254,8 +1298,9 @@ export function classifyBattleReport(options: {
     const loserInitial = winner === "attacker" ? defenderTotalUnits : attackerTotalUnits;
     const loserCasualties = winner === "attacker" ? defenderCasualties : attackerCasualties;
     const winnerCasualties = winner === "attacker" ? attackerCasualties : defenderCasualties;
+    const winnerTotalUnits = winner === "attacker" ? attackerTotalUnits : defenderTotalUnits;
     const loserLossRate = loserInitial > 0 ? loserCasualties / loserInitial : 0;
-    const winnerLossRate = attackerTotalUnits > 0 ? winnerCasualties / attackerTotalUnits : 0;
+    const winnerLossRate = winnerTotalUnits > 0 ? winnerCasualties / winnerTotalUnits : 0;
 
     if (loserLossRate >= 0.99) {
       reportClass = "decisive";
@@ -1330,4 +1375,17 @@ export function getShipCombatProfile(shipType: string): ShipCombatProfile | unde
 /** Get a planet defense platform by type key */
 export function getPlanetDefensePlatform(platformType: string): PlanetDefenseProfile | undefined {
   return PLANET_DEFENSE_PLATFORMS.find((p) => p.platformType === platformType);
+}
+
+/** Mothership hull types — ship types that count as a mothership */
+export const MOTHERSHIP_TYPES = new Set([
+  "commandShip", "mobileFortress", "siegeShip", "flagCommand", "mobileHQ",
+  "factoryShip", "hospitalShip", "colonyShip",
+]);
+
+/**
+ * Returns true if the provided unit-type map contains at least one mothership-class vessel.
+ */
+export function hasMothership(units: Record<string, any>): boolean {
+  return Object.keys(units).some((t) => MOTHERSHIP_TYPES.has(t));
 }

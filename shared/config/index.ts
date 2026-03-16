@@ -452,6 +452,8 @@ export {
   getDefensesForPlatform,
   getShipCombatProfile,
   getPlanetDefensePlatform,
+  hasMothership,
+  MOTHERSHIP_TYPES,
 } from './weaponsAndDefenseConfig';
 export type {
   WeaponSystem,
