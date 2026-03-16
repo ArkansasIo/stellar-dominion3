@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import {
   STARGATES,
+  JUMPGATES,
   WORMHOLES,
   FTL_DRIVES,
   calculateDistance,
@@ -8,6 +9,9 @@ import {
   calculateTravelTime,
   buildTravelRoute,
   getNearbyWormholes,
+  getJumpgatesByNetwork,
+  getJumpgatesByFaction,
+  getLinkedJumpgates,
   getPlanetType,
   getPlanetsByClass,
   getPlanetsByFamily,
@@ -57,6 +61,35 @@ export function registerTravelRoutes(app: any) {
   // Travel network catalog
   app.get("/api/travel/stargates", (_req: Request, res: Response) => {
     res.json({ count: STARGATES.length, stargates: STARGATES });
+  });
+
+  app.get("/api/travel/jumpgates", (req: Request, res: Response) => {
+    const { network, faction, activeOnly } = req.query;
+
+    // Start from the network-scoped set (or all gates if no network filter)
+    let gates = network
+      ? getJumpgatesByNetwork(String(network))
+      : [...JUMPGATES];
+
+    if (faction) {
+      const factionStr = String(faction);
+      gates = gates.filter(g => g.faction === factionStr);
+    }
+
+    if (activeOnly === "true") {
+      gates = gates.filter(g => g.isActive && !g.underConstruction);
+    }
+
+    res.json({ count: gates.length, jumpgates: gates });
+  });
+
+  app.get("/api/travel/jumpgates/:id/linked", (req: Request, res: Response) => {
+    const linked = getLinkedJumpgates(req.params.id);
+    if (!linked.length) {
+      // Return empty rather than 404 — the gate may simply have no links
+      return res.json({ count: 0, linkedJumpgates: [] });
+    }
+    res.json({ count: linked.length, linkedJumpgates: linked });
   });
 
   app.get("/api/travel/wormholes", (req: Request, res: Response) => {
