@@ -37,6 +37,8 @@ interface Resources {
   crystal: number;
   deuterium: number;
   energy: number;
+  food: number;
+  water: number;
 }
 
 interface Buildings {
@@ -47,6 +49,8 @@ interface Buildings {
   roboticsFactory: number;
   shipyard: number;
   researchLab: number;
+  hydroponicsFarm: number;
+  waterPurificationPlant: number;
 }
 
 interface OrbitalBuildings {
@@ -208,6 +212,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     crystal: 50000,
     deuterium: 20000,
     energy: 5000,
+    food: 10000,
+    water: 8000,
   });
 
   const [buildings, setBuildings] = useState<Buildings>({
@@ -218,6 +224,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     roboticsFactory: 2,
     shipyard: 2,
     researchLab: 1,
+    hydroponicsFarm: 3,
+    waterPurificationPlant: 2,
   });
 
   const [orbitalBuildings, setOrbitalBuildings] = useState<OrbitalBuildings>({
@@ -644,18 +652,24 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const crystalProd = 20 * buildings.crystalMine * Math.pow(1.1, buildings.crystalMine) * totalBonus;
     const deutProd = 10 * buildings.deuteriumSynthesizer * Math.pow(1.1, buildings.deuteriumSynthesizer) * totalBonus;
     const energyProd = 20 * buildings.solarPlant * Math.pow(1.1, buildings.solarPlant);
-    
+
+    // Food and water production
+    const foodProd = 50 * buildings.hydroponicsFarm * Math.pow(1.15, buildings.hydroponicsFarm) * totalBonus;
+    const waterProd = 60 * buildings.waterPurificationPlant * Math.pow(1.15, buildings.waterPurificationPlant) * totalBonus;
+
     const metalCons = 10 * buildings.metalMine * Math.pow(1.1, buildings.metalMine);
     const crystalCons = 10 * buildings.crystalMine * Math.pow(1.1, buildings.crystalMine);
     const deutCons = 20 * buildings.deuteriumSynthesizer * Math.pow(1.1, buildings.deuteriumSynthesizer);
-    
+
     const energyUsed = metalCons + crystalCons + deutCons;
 
     return {
       metal: metalProd / 3600,
       crystal: crystalProd / 3600,
       deuterium: deutProd / 3600,
-      energy: energyProd - energyUsed
+      energy: energyProd - energyUsed,
+      food: foodProd / 3600,
+      water: waterProd / 3600
     };
   };
 
@@ -672,7 +686,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         metal: prev.metal + (production.metal * 10 * speedMult),
         crystal: prev.crystal + (production.crystal * 10 * speedMult),
         deuterium: prev.deuterium + (production.deuterium * 10 * speedMult),
-        energy: production.energy
+        energy: production.energy,
+        food: prev.food + (production.food * 10 * speedMult),
+        water: prev.water + (production.water * 10 * speedMult)
       }));
 
       // 2. Process Cron Jobs

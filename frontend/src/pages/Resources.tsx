@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Box, Gem, Database, Zap, ArrowUpCircle, Hammer, Clock, TrendingUp, Warehouse, Info, ChevronRight, BarChart3 } from "lucide-react";
+import { Box, Gem, Database, Zap, ArrowUpCircle, Hammer, Clock, TrendingUp, Warehouse, Info, ChevronRight, BarChart3, Wheat, Droplets } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
@@ -127,12 +127,16 @@ export default function Resources() {
   const crystalProduction = Math.floor(20 * buildings.crystalMine * 1.05);
   const deuteriumProduction = Math.floor(10 * buildings.deuteriumSynthesizer * 1.02);
   const energyProduction = Math.floor(20 * buildings.solarPlant);
+  const foodProduction = Math.floor(50 * buildings.hydroponicsFarm * 1.15);
+  const waterProduction = Math.floor(60 * buildings.waterPurificationPlant * 1.15);
   const energyConsumption = Math.floor(10 * (buildings.metalMine + buildings.crystalMine + buildings.deuteriumSynthesizer));
 
   const storageCapacity = {
     metal: Math.floor(10000 * Math.pow(1.5, buildings.metalMine)),
     crystal: Math.floor(10000 * Math.pow(1.5, buildings.crystalMine)),
-    deuterium: Math.floor(10000 * Math.pow(1.5, buildings.deuteriumSynthesizer))
+    deuterium: Math.floor(10000 * Math.pow(1.5, buildings.deuteriumSynthesizer)),
+    food: Math.floor(5000 * Math.pow(1.4, buildings.hydroponicsFarm)),
+    water: Math.floor(6000 * Math.pow(1.4, buildings.waterPurificationPlant))
   };
 
   return (
@@ -145,7 +149,7 @@ export default function Resources() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200" data-testid="card-stats-metal">
             <CardContent className="p-4">
               <div className="flex items-center gap-3 mb-3">
@@ -252,6 +256,56 @@ export default function Resources() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200" data-testid="card-stats-food">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <Wheat className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <div className="text-xs text-amber-600 uppercase">Food</div>
+                  <div className="text-xl font-orbitron font-bold text-amber-900">{Math.floor(resources.food).toLocaleString()}</div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-amber-500">Production</span>
+                  <span className="font-mono text-green-600">+{foodProduction}/h</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-amber-500">Storage</span>
+                  <span className="font-mono">{storageCapacity.food.toLocaleString()}</span>
+                </div>
+                <Progress value={(resources.food / storageCapacity.food) * 100} className="h-1 bg-amber-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200" data-testid="card-stats-water">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                  <Droplets className="w-5 h-5 text-cyan-600" />
+                </div>
+                <div>
+                  <div className="text-xs text-cyan-600 uppercase">Water</div>
+                  <div className="text-xl font-orbitron font-bold text-cyan-900">{Math.floor(resources.water).toLocaleString()}</div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-cyan-500">Production</span>
+                  <span className="font-mono text-green-600">+{waterProduction}/h</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-cyan-500">Storage</span>
+                  <span className="font-mono">{storageCapacity.water.toLocaleString()}</span>
+                </div>
+                <Progress value={(resources.water / storageCapacity.water) * 100} className="h-1 bg-cyan-200" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Card className="bg-white border-slate-200 shadow-sm" data-testid="card-projections">
@@ -285,6 +339,18 @@ export default function Resources() {
                 <div className="text-sm font-mono text-slate-900">+{deuteriumProduction.toLocaleString()}</div>
                 <div className="text-sm font-mono text-slate-900">+{(deuteriumProduction * 6).toLocaleString()}</div>
                 <div className="text-sm font-mono text-slate-900">+{(deuteriumProduction * 24).toLocaleString()}</div>
+              </div>
+              <div className="space-y-3">
+                <div className="text-xs text-amber-600 uppercase font-bold flex items-center gap-1"><Wheat className="w-3 h-3" /> Food</div>
+                <div className="text-sm font-mono text-slate-900">+{foodProduction.toLocaleString()}</div>
+                <div className="text-sm font-mono text-slate-900">+{(foodProduction * 6).toLocaleString()}</div>
+                <div className="text-sm font-mono text-slate-900">+{(foodProduction * 24).toLocaleString()}</div>
+              </div>
+              <div className="space-y-3">
+                <div className="text-xs text-cyan-600 uppercase font-bold flex items-center gap-1"><Droplets className="w-3 h-3" /> Water</div>
+                <div className="text-sm font-mono text-slate-900">+{waterProduction.toLocaleString()}</div>
+                <div className="text-sm font-mono text-slate-900">+{(waterProduction * 6).toLocaleString()}</div>
+                <div className="text-sm font-mono text-slate-900">+{(waterProduction * 24).toLocaleString()}</div>
               </div>
             </div>
           </CardContent>
@@ -362,7 +428,7 @@ export default function Resources() {
               nextLevelBonus={Math.floor(10 * (buildings.deuteriumSynthesizer + 1) * 1.02) - deuteriumProduction}
               energyCost={Math.floor(10 * buildings.deuteriumSynthesizer)}
            />
-           <BuildingCard 
+           <BuildingCard
               id="solarPlant"
               name="Solar Power Plant"
               level={buildings.solarPlant}
@@ -373,6 +439,30 @@ export default function Resources() {
               onUpgrade={updateBuilding}
               productionRate={energyProduction}
               nextLevelBonus={Math.floor(20 * (buildings.solarPlant + 1)) - energyProduction}
+           />
+           <BuildingCard
+              id="hydroponicsFarm"
+              name="Hydroponics Farm"
+              level={buildings.hydroponicsFarm}
+              description="Cultivates food through advanced hydroponic systems. Essential for sustaining population growth and colonization efforts."
+              icon={Wheat}
+              iconColor="text-amber-600"
+              resources={resources}
+              onUpgrade={updateBuilding}
+              productionRate={foodProduction}
+              nextLevelBonus={Math.floor(50 * (buildings.hydroponicsFarm + 1) * 1.15) - foodProduction}
+           />
+           <BuildingCard
+              id="waterPurificationPlant"
+              name="Water Purification Plant"
+              level={buildings.waterPurificationPlant}
+              description="Purifies and processes water for consumption and industrial use. Critical for population sustainability and manufacturing processes."
+              icon={Droplets}
+              iconColor="text-cyan-600"
+              resources={resources}
+              onUpgrade={updateBuilding}
+              productionRate={waterProduction}
+              nextLevelBonus={Math.floor(60 * (buildings.waterPurificationPlant + 1) * 1.15) - waterProduction}
            />
         </div>
 
@@ -410,6 +500,24 @@ export default function Resources() {
                 <div className="text-2xl font-mono font-bold text-slate-900 mb-1">{storageCapacity.deuterium.toLocaleString()}</div>
                 <div className="text-xs text-muted-foreground">Current: {Math.floor(resources.deuterium).toLocaleString()} ({Math.floor((resources.deuterium / storageCapacity.deuterium) * 100)}%)</div>
                 <Progress value={(resources.deuterium / storageCapacity.deuterium) * 100} className="h-2 mt-2 bg-green-200" />
+              </div>
+              <div className="bg-white p-4 rounded border border-slate-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Wheat className="w-4 h-4 text-amber-600" />
+                  <span className="text-sm font-bold text-slate-900">Food Storage</span>
+                </div>
+                <div className="text-2xl font-mono font-bold text-slate-900 mb-1">{storageCapacity.food.toLocaleString()}</div>
+                <div className="text-xs text-muted-foreground">Current: {Math.floor(resources.food).toLocaleString()} ({Math.floor((resources.food / storageCapacity.food) * 100)}%)</div>
+                <Progress value={(resources.food / storageCapacity.food) * 100} className="h-2 mt-2 bg-amber-200" />
+              </div>
+              <div className="bg-white p-4 rounded border border-slate-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Droplets className="w-4 h-4 text-cyan-600" />
+                  <span className="text-sm font-bold text-slate-900">Water Reserves</span>
+                </div>
+                <div className="text-2xl font-mono font-bold text-slate-900 mb-1">{storageCapacity.water.toLocaleString()}</div>
+                <div className="text-xs text-muted-foreground">Current: {Math.floor(resources.water).toLocaleString()} ({Math.floor((resources.water / storageCapacity.water) * 100)}%)</div>
+                <Progress value={(resources.water / storageCapacity.water) * 100} className="h-2 mt-2 bg-cyan-200" />
               </div>
             </div>
           </CardContent>

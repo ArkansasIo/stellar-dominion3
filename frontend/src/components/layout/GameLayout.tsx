@@ -3,14 +3,14 @@ import { useGame } from "@/lib/gameContext";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { 
-  LayoutDashboard, 
-  Pickaxe, 
-  Factory, 
-  FlaskConical, 
-  Rocket, 
-  Send, 
-  Globe, 
+import {
+  LayoutDashboard,
+  Pickaxe,
+  Factory,
+  FlaskConical,
+  Rocket,
+  Send,
+  Globe,
   Settings,
   Zap,
   Database,
@@ -47,6 +47,8 @@ import {
   Network,
   AlertTriangle,
   Image,
+  Wheat,
+  Droplets,
 } from "lucide-react";
 
 const SidebarItem = ({ href, icon: Icon, label, active, className, indent = false }: { href: string, icon: any, label: string, active: boolean, className?: string, indent?: boolean }) => (
@@ -182,15 +184,17 @@ export default function GameLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <div className="flex gap-4">
-          <TurnDisplay 
-            currentTurns={turnData?.currentTurns || 0} 
-            totalTurns={turnData?.totalTurns || 0} 
-            isLoading={turnsLoading} 
+          <TurnDisplay
+            currentTurns={turnData?.currentTurns || 0}
+            totalTurns={turnData?.totalTurns || 0}
+            isLoading={turnsLoading}
           />
           <ResourceDisplay icon={Box} label="Metal" value={resources.metal} colorClass="text-slate-600" />
           <ResourceDisplay icon={Gem} label="Crystal" value={resources.crystal} colorClass="text-blue-600" />
           <ResourceDisplay icon={Database} label="Deuterium" value={resources.deuterium} colorClass="text-green-600" />
           <ResourceDisplay icon={Zap} label="Energy" value={resources.energy} colorClass={resources.energy >= 0 ? "text-yellow-600" : "text-red-600"} />
+          <ResourceDisplay icon={Wheat} label="Food" value={resources.food} colorClass="text-amber-600" />
+          <ResourceDisplay icon={Droplets} label="Water" value={resources.water} colorClass="text-cyan-600" />
         </div>
       </header>
 
