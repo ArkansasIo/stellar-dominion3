@@ -44,7 +44,9 @@ async function buildAll() {
     ...Object.keys(pkg.dependencies || {}),
     ...Object.keys(pkg.devDependencies || {}),
   ];
-  const externals = allDeps.filter((dep) => !allowlist.includes(dep));
+  const externals = allDeps
+    .filter((dep) => !allowlist.includes(dep))
+    .concat(["./vite"]);
 
   await esbuild({
     entryPoints: ["server/index.ts"],

@@ -11,8 +11,22 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ORBITAL_BUILDINGS, StationBuilding } from "@/lib/stationData";
+import { MENU_ASSETS } from "@shared/config";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
+
+const FACILITY_IMAGE_MAP: Record<string, string> = {
+  roboticsFactory: MENU_ASSETS.BUILDINGS.ROBOTICS_FACTORY.path,
+  shipyard:         MENU_ASSETS.BUILDINGS.SHIPYARD.path,
+  researchLab:      MENU_ASSETS.BUILDINGS.RESEARCH_LAB.path,
+  naniteFactory:    MENU_ASSETS.BUILDINGS.ROBOTICS_FACTORY.path,
+  terraformer:      MENU_ASSETS.BUILDINGS.SPACEPORT.path,
+  spaceStation:     MENU_ASSETS.BUILDINGS.SPACEPORT.path,
+  allianceDepot:    MENU_ASSETS.BUILDINGS.TRADE_STATION.path,
+  missileSilo:      MENU_ASSETS.BUILDINGS.DEFENSE_TURRET.path,
+};
 
 type FacilityBase = "planet" | "moon" | "station";
 
@@ -29,7 +43,8 @@ const FacilityCard = ({
   nextEffect,
   requirement,
   requirementMet,
-  iconColor
+  iconColor,
+  imagePath,
 }: any) => {
   const baseMetal = customCost ? customCost.metal : 200;
   const baseCrystal = customCost ? customCost.crystal : 100;
@@ -47,12 +62,33 @@ const FacilityCard = ({
   return (
     <Card className={cn("bg-white border-slate-200 hover:border-primary/50 transition-all group overflow-hidden shadow-sm flex flex-col h-full", !requirementMet && requirementMet !== undefined && "opacity-60")} data-testid={`card-facility-${id}`}>
        <div className={cn("h-36 bg-gradient-to-br from-slate-50 to-slate-100 relative group-hover:from-slate-100 group-hover:to-slate-200 transition-colors duration-500 border-b border-slate-200")}>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Icon className={cn("w-20 h-20 opacity-20", iconColor || "text-slate-400")} />
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Icon className={cn("w-16 h-16 transition-transform group-hover:scale-110", iconColor || "text-slate-500")} />
-          </div>
+          {imagePath ? (
+            <>
+              <img
+                src={imagePath}
+                alt={name}
+                className="absolute inset-0 w-full h-full object-contain opacity-20 pointer-events-none"
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <img
+                  src={imagePath}
+                  alt={name}
+                  className="w-16 h-16 object-contain drop-shadow transition-transform group-hover:scale-110"
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Icon className={cn("w-20 h-20 opacity-20", iconColor || "text-slate-400")} />
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Icon className={cn("w-16 h-16 transition-transform group-hover:scale-110", iconColor || "text-slate-500")} />
+              </div>
+            </>
+          )}
           <div className="absolute bottom-2 right-2 bg-white px-3 py-1.5 rounded text-sm font-orbitron text-primary border border-slate-200 shadow-sm">
             Level {level}
           </div>
@@ -217,8 +253,8 @@ export default function Facilities() {
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200" data-testid="card-stats-surface">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <Globe className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={MENU_ASSETS.BUILDINGS.ROBOTICS_FACTORY.path} alt="surface" className="w-7 h-7 object-contain" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-blue-600 uppercase">Surface Level</div>
@@ -231,8 +267,8 @@ export default function Facilities() {
           <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200" data-testid="card-stats-moon">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-slate-500/10 flex items-center justify-center">
-                  <Moon className="w-5 h-5 text-slate-600" />
+                <div className="w-10 h-10 rounded-full bg-slate-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={MENU_ASSETS.BUILDINGS.SPACEPORT.path} alt="moon" className="w-7 h-7 object-contain" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-slate-600 uppercase">Lunar Level</div>
@@ -247,8 +283,8 @@ export default function Facilities() {
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200" data-testid="card-stats-orbital">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                  <Satellite className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={MENU_ASSETS.BUILDINGS.SHIPYARD.path} alt="orbital" className="w-7 h-7 object-contain" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-purple-600 uppercase">Orbital Level</div>
@@ -263,8 +299,8 @@ export default function Facilities() {
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200" data-testid="card-stats-total">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <Factory className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={MENU_ASSETS.BUILDINGS.RESEARCH_LAB.path} alt="infrastructure" className="w-7 h-7 object-contain" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-green-600 uppercase">Total Infrastructure</div>
@@ -330,6 +366,7 @@ export default function Facilities() {
                       description="Robotics factories provide automated construction units. Each level reduces all building construction times by 10%."
                       icon={Factory}
                       iconColor="text-orange-500"
+                      imagePath={FACILITY_IMAGE_MAP["roboticsFactory"]}
                       resources={resources}
                       onUpgrade={updateBuilding}
                       {...getFacilityEffect("roboticsFactory", buildings.roboticsFactory)}
@@ -342,6 +379,7 @@ export default function Facilities() {
                       description="The Shipyard constructs your fleet and defense systems. Higher levels unlock advanced ship classes and reduce build times."
                       icon={Rocket}
                       iconColor="text-blue-500"
+                      imagePath={FACILITY_IMAGE_MAP["shipyard"]}
                       resources={resources}
                       onUpgrade={updateBuilding}
                       {...getFacilityEffect("shipyard", buildings.shipyard)}
@@ -355,6 +393,7 @@ export default function Facilities() {
                       description="The Research Lab is essential for technological advancement. Higher levels reduce research time and unlock advanced technologies."
                       icon={FlaskConical}
                       iconColor="text-green-500"
+                      imagePath={FACILITY_IMAGE_MAP["researchLab"]}
                       resources={resources}
                       onUpgrade={updateBuilding}
                       {...getFacilityEffect("researchLab", buildings.researchLab)}

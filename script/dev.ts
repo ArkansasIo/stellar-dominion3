@@ -46,10 +46,13 @@ const preferredPort = Number.parseInt(process.env.PORT || "5001", 10);
 const basePort = Number.isFinite(preferredPort) && preferredPort > 0 ? preferredPort : 5001;
 
 async function startDev() {
-  const selectedPort = await findAvailablePort(basePort);
-  if (selectedPort !== basePort) {
-    console.log(`Port ${basePort} is in use, switching to ${selectedPort}.`);
+  const portFree = await isPortFree(basePort);
+  if (!portFree) {
+    console.error(`Port ${basePort} is already in use. Stop the process using this port and restart dev.`);
+    process.exit(1);
   }
+
+  const selectedPort = basePort;
 
   const command = hasDatabaseUrl
     ? "tsx server/index.ts"

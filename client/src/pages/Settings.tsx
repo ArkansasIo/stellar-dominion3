@@ -20,6 +20,9 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { MENU_ASSETS } from "@shared/config";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
 
 type AccountSettingsResponse = {
    id: string;
@@ -431,8 +434,13 @@ export default function Settings() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                        <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
-                          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                             <UserIcon className="w-8 h-8 text-primary" />
+                          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                             <img
+                                src={MENU_ASSETS.NAVIGATION.SETTINGS.path}
+                                alt="profile"
+                                className="w-10 h-10 object-contain"
+                                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+                             />
                           </div>
                           <div className="flex-1">
                              <div className="font-orbitron font-bold text-lg text-slate-900">{username || "Commander"}</div>

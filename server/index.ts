@@ -13,9 +13,7 @@ import { registerArtifactRoutes } from "./routes-artifacts";
 import { registerGuildRoutes } from "./routes-guilds";
 import { ServerStatusService } from "./services/serverStatusService";
 
-if (!process.env.NODE_ENV) {
-  process.env.NODE_ENV = "production";
-}
+const runtimeNodeEnv = process.env.NODE_ENV ?? "production";
 
 const app = express();
 const httpServer = createServer(app);
@@ -143,7 +141,9 @@ import { registerMegastructureRoutes } from "./routes-megastructures";
 import { registerUnitSystemsRoutes } from "./routes-unitsystems";
 import { registerGovernmentLeaderRoutes } from "./routes-government-leaders";
 import { registerGalaxyRoutes } from "./routes-galaxy";
+import { registerRealmRoutes } from "./routes-realms";
 import { registerLifeSupportRoutes } from "./routes-lifesupport";
+import { registerLiveOpsRoutes } from "./routes-liveops";
 import turnSystemRoutes from "./routes-turnsystem";
 import researchXPRoutes from "./routes-researchxp";
 import recommendationsRoutes from "./routes-recommendations";
@@ -157,6 +157,7 @@ import ogameRoutes from "./routes-ogame";
 import friendsRoutes from "./routes-friends";
 import worldActionsRoutes from "./routes-worldactions";
 import tradesRoutes from "./routes-trades";
+import messagesRoutes from "./routes-messages";
 import { seedOgameCatalogIfNeeded } from "./services/ogameCatalogService";
 
 (async () => {
@@ -197,7 +198,9 @@ import { seedOgameCatalogIfNeeded } from "./services/ogameCatalogService";
   registerUnitSystemsRoutes(app);
   registerGovernmentLeaderRoutes(app);
   registerGalaxyRoutes(app);
+  registerRealmRoutes(app);
   registerLifeSupportRoutes(app);
+  registerLiveOpsRoutes(app);
   registerAccountRoutes(app);
   registerAdminRoutes(app);
   registerAllianceRoutes(app);
@@ -214,6 +217,7 @@ import { seedOgameCatalogIfNeeded } from "./services/ogameCatalogService";
   app.use('/api/assets', assetsRoutes);
   app.use('/api/ogame', ogameRoutes);
   app.use('/api/friends', friendsRoutes);
+  app.use('/api/messages', messagesRoutes);
   app.use(tradesRoutes);
   app.use(worldActionsRoutes);
 
@@ -230,7 +234,7 @@ import { seedOgameCatalogIfNeeded } from "./services/ogameCatalogService";
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (process.env.NODE_ENV === "production") {
+  if (runtimeNodeEnv === "production") {
     serveStatic(app);
   } else {
     const { setupVite } = await import("./vite");
@@ -329,7 +333,7 @@ import { seedOgameCatalogIfNeeded } from "./services/ogameCatalogService";
         console.log(colors.bright + "Main Server Info:" + colors.reset);
         console.log(`  ${statusOn} Server Status: ${colors.green}RUNNING${colors.reset}`);
         console.log(`  ${statusOn} Port: ${colors.cyan}${port}${colors.reset}`);
-        console.log(`  ${statusOn} Environment: ${colors.cyan}${process.env.NODE_ENV || 'development'}${colors.reset}`);
+        console.log(`  ${statusOn} Environment: ${colors.cyan}${runtimeNodeEnv}${colors.reset}`);
         
         console.log("\n" + colors.bright + "Database:" + colors.reset);
         console.log(`  ${statusOn} PostgreSQL: ${colors.green}CONNECTED${colors.reset}`);

@@ -1,5 +1,6 @@
 import GameLayout from "@/components/layout/GameLayout";
 import { useGame } from "@/lib/gameContext";
+import { PLANET_ASSETS, TECH_BRANCH_ASSETS, SHIP_ASSETS } from "@shared/config";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -16,6 +17,21 @@ import { getPlanetDetails } from "@/lib/planetUtils";
 import Navigation from "./Navigation";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
+
+function getPlanetImagePath(planetClass: string): string {
+  const c = planetClass.toUpperCase();
+  if (c === "M") return PLANET_ASSETS.TERRESTRIAL.EARTH_LIKE.path;
+  if (c === "H") return PLANET_ASSETS.TERRESTRIAL.DESERT.path;
+  if (c === "L") return PLANET_ASSETS.TERRESTRIAL.JUNGLE.path;
+  if (c === "K") return PLANET_ASSETS.TERRESTRIAL.ICE.path;
+  if (c === "Y") return PLANET_ASSETS.TERRESTRIAL.VOLCANIC.path;
+  if (c === "D") return PLANET_ASSETS.TERRESTRIAL.DESERT.path;
+  if (c === "J") return PLANET_ASSETS.GAS_GIANTS.JUPITER_CLASS.path;
+  if (c === "T") return PLANET_ASSETS.GAS_GIANTS.NEPTUNE_CLASS.path;
+  return PLANET_ASSETS.TERRESTRIAL.EARTH_LIKE.path;
+}
 
 export default function Overview() {
   const { 
@@ -41,6 +57,84 @@ export default function Overview() {
   const buildQueue = queue.filter(q => q.type === "building");
   const researchQueue = queue.filter(q => q.type === "research");
   const unitQueue = queue.filter(q => q.type === "unit");
+  const totalUnits = Object.values(units).reduce((sum, count) => sum + count, 0);
+
+  const missionBreakdown = {
+    outbound: activeMissions.filter((mission) => mission.status === "outbound").length,
+    return: activeMissions.filter((mission) => mission.status === "return").length,
+    combat: activeMissions.filter((mission) => mission.type === "attack").length,
+    logistics: activeMissions.filter((mission) => ["transport", "colonize", "deploy"].includes(mission.type)).length,
+  };
+
+  const nextQueueCompletion = queue.length
+    ? Math.max(0, Math.min(...queue.map((item) => item.endTime)) - Date.now())
+    : 0;
+  const nextQueueCompletionSeconds = Math.ceil(nextQueueCompletion / 1000);
+
+  const economyReadiness = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        45 +
+          buildings.metalMine * 2 +
+          buildings.crystalMine * 2 +
+          buildings.deuteriumSynthesizer * 2 -
+          (energyProduction < 0 ? Math.min(30, Math.abs(Math.floor(energyProduction / 50))) : 0)
+      )
+    )
+  );
+  const defenseReadiness = Math.max(0, Math.min(100, Math.round(25 + totalFleetPower / 250 + totalUnits / 20)));
+  const researchReadiness = Math.max(0, Math.min(100, Math.round(20 + totalResearchLevels * 3)));
+  const logisticsReadiness = Math.max(0, Math.min(100, Math.round(35 + activeMissions.length * 5 + unitQueue.length * 4)));
+
+  const alerts: Array<{ title: string; detail: string; level: "warning" | "danger" | "info" }> = [];
+  if (energyProduction < 0) {
+    alerts.push({
+      title: "Energy Deficit",
+      detail: `Production is ${energyProduction.toLocaleString()}/h. Upgrade Solar Plant or pause heavy industry.`,
+      level: "danger",
+    });
+  }
+  if (resources.metal < 10000 || resources.crystal < 8000) {
+    alerts.push({
+      title: "Low Core Reserves",
+      detail: "Metal/Crystal reserves are low for sustained upgrades.",
+      level: "warning",
+    });
+  }
+  if (activeMissions.length === 0) {
+    alerts.push({
+      title: "Idle Fleet",
+      detail: "No active missions. Consider scouting, transport, or combat deployment.",
+      level: "info",
+    });
+  }
+  if (queue.length === 0) {
+    alerts.push({
+      title: "No Active Queue",
+      detail: "Construction/research queue is empty. Queue next growth milestone.",
+      level: "info",
+    });
+  }
+
+  const recommendations = [
+    {
+      label: energyProduction < 0 ? "Stabilize energy economy" : "Scale mineral production",
+      reason: energyProduction < 0 ? "Prevent production penalties from power deficit." : "Increase hourly throughput for faster upgrades.",
+      href: "/resources",
+    },
+    {
+      label: queue.length === 0 ? "Queue next build/research" : "Review active queue priorities",
+      reason: queue.length === 0 ? "Avoid idle development time." : `Next completion in ~${nextQueueCompletionSeconds}s.`,
+      href: queue.length === 0 ? "/facilities" : "/research",
+    },
+    {
+      label: activeMissions.length === 0 ? "Dispatch strategic mission" : "Track mission outcomes",
+      reason: activeMissions.length === 0 ? "Keep fleet active for expansion and intel." : `${missionBreakdown.outbound} outbound / ${missionBreakdown.return} returning.`,
+      href: "/fleet",
+    },
+  ];
 
   return (
     <GameLayout>
@@ -70,8 +164,8 @@ export default function Overview() {
                     {((totalFleetPower / 10) + (totalResearchLevels * 100) + (Object.values(buildings).reduce((s, v) => s + v, 0) * 50)).toLocaleString()}
                   </div>
                 </div>
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Trophy className="w-6 h-6 text-primary" />
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.SENSORS.path} alt="score" className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
               </div>
             </CardContent>
@@ -84,8 +178,8 @@ export default function Overview() {
                   <div className="text-xs text-blue-600 uppercase tracking-wider">Fleet Power</div>
                   <div className="text-2xl font-orbitron font-bold text-blue-900">{totalFleetPower.toLocaleString()}</div>
                 </div>
-                <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <Rocket className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={SHIP_ASSETS.FIGHTERS.FIGHTER.path} alt="fleet" className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
               </div>
             </CardContent>
@@ -98,8 +192,8 @@ export default function Overview() {
                   <div className="text-xs text-green-600 uppercase tracking-wider">Research Level</div>
                   <div className="text-2xl font-orbitron font-bold text-green-900">{totalResearchLevels}</div>
                 </div>
-                <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <FlaskConical className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.COMPUTING.path} alt="research" className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
               </div>
             </CardContent>
@@ -112,8 +206,8 @@ export default function Overview() {
                   <div className="text-xs text-purple-600 uppercase tracking-wider">Active Missions</div>
                   <div className="text-2xl font-orbitron font-bold text-purple-900">{activeMissions.length}</div>
                 </div>
-                <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
-                  <Target className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.PROPULSION.path} alt="missions" className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
               </div>
             </CardContent>
@@ -156,11 +250,31 @@ export default function Overview() {
                   )}
                 </Button>
               </Link>
+              <Link href="/story-mode">
+                <Button variant="outline" className="w-full justify-start h-10 text-slate-700 hover:bg-slate-50" data-testid="button-goto-story-mode">
+                  <Target className="w-4 h-4 mr-2 text-indigo-500" /> Story Mode
+                </Button>
+              </Link>
+              <Link href="/season-pass">
+                <Button variant="outline" className="w-full justify-start h-10 text-slate-700 hover:bg-slate-50" data-testid="button-goto-season-pass">
+                  <Trophy className="w-4 h-4 mr-2 text-amber-500" /> Season Pass
+                </Button>
+              </Link>
+              <Link href="/storefront">
+                <Button variant="outline" className="w-full justify-start h-10 text-slate-700 hover:bg-slate-50" data-testid="button-goto-storefront">
+                  <Gem className="w-4 h-4 mr-2 text-blue-500" /> Storefront
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
           <Card className="lg:col-span-2 bg-white border-slate-200 overflow-hidden relative shadow-sm" data-testid="card-planet-status">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1614730341194-75c6074065db?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-10 pointer-events-none"></div>
+            <img
+              src={getPlanetImagePath(planetInfo.class)}
+              alt={planetInfo.type}
+              className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none"
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+            />
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-slate-900">
                  <div className="flex items-center gap-2">
@@ -272,6 +386,101 @@ export default function Overview() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="bg-white border-slate-200 shadow-sm" data-testid="card-operational-readiness">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary" /> Operational Readiness
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1"><span>Economy</span><span className="font-mono">{economyReadiness}%</span></div>
+                <Progress value={economyReadiness} className="h-2" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1"><span>Defense</span><span className="font-mono">{defenseReadiness}%</span></div>
+                <Progress value={defenseReadiness} className="h-2" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1"><span>Research</span><span className="font-mono">{researchReadiness}%</span></div>
+                <Progress value={researchReadiness} className="h-2" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1"><span>Logistics</span><span className="font-mono">{logisticsReadiness}%</span></div>
+                <Progress value={logisticsReadiness} className="h-2" />
+              </div>
+              <Separator />
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="p-2 bg-slate-50 rounded border border-slate-100">
+                  <div className="text-slate-500">Missions</div>
+                  <div className="font-bold text-slate-900">{activeMissions.length}</div>
+                </div>
+                <div className="p-2 bg-slate-50 rounded border border-slate-100">
+                  <div className="text-slate-500">Queue Items</div>
+                  <div className="font-bold text-slate-900">{queue.length}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-slate-200 shadow-sm" data-testid="card-game-logic-snapshot">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Info className="w-4 h-4 text-blue-500" /> Game Logic Snapshot
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-xs">
+              <div className="p-2 bg-slate-50 rounded border border-slate-100">
+                <div className="font-semibold text-slate-800">Empire Score Formula</div>
+                <div className="text-slate-600">Fleet ÷ 10 + Research × 100 + Building Levels × 50</div>
+              </div>
+              <div className="p-2 bg-slate-50 rounded border border-slate-100">
+                <div className="font-semibold text-slate-800">Production Drivers</div>
+                <div className="text-slate-600">Mines scale with building level multipliers; energy deficit reduces effective output.</div>
+              </div>
+              <div className="p-2 bg-slate-50 rounded border border-slate-100">
+                <div className="font-semibold text-slate-800">Mission Flow</div>
+                <div className="text-slate-600">Outbound: {missionBreakdown.outbound} · Returning: {missionBreakdown.return} · Combat: {missionBreakdown.combat}</div>
+              </div>
+              <div className="p-2 bg-slate-50 rounded border border-slate-100">
+                <div className="font-semibold text-slate-800">Queue Forecast</div>
+                <div className="text-slate-600">Next completion in {queue.length ? `${nextQueueCompletionSeconds}s` : "—"}.</div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-slate-200 shadow-sm" data-testid="card-priority-actions">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Bell className="w-4 h-4 text-orange-500" /> Priority Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {alerts.slice(0, 3).map((alert, index) => (
+                <div key={`${alert.title}-${index}`} className={cn(
+                  "rounded border p-2 text-xs",
+                  alert.level === "danger" && "bg-red-50 border-red-200 text-red-700",
+                  alert.level === "warning" && "bg-amber-50 border-amber-200 text-amber-700",
+                  alert.level === "info" && "bg-blue-50 border-blue-200 text-blue-700"
+                )}>
+                  <div className="font-semibold">{alert.title}</div>
+                  <div>{alert.detail}</div>
+                </div>
+              ))}
+
+              <Separator />
+
+              {recommendations.map((recommendation) => (
+                <Link key={recommendation.label} href={recommendation.href}>
+                  <Button variant="outline" className="w-full justify-between text-xs h-9">
+                    <span>{recommendation.label}</span>
+                    <span className="text-muted-foreground">→</span>
+                  </Button>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
+
           <Card className="bg-white border-slate-200 shadow-sm" data-testid="card-construction-queue">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
@@ -403,8 +612,8 @@ export default function Overview() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-primary" />
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                    <img src={TECH_BRANCH_ASSETS.SHIELDS.path} alt="alliance" className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Alliance</div>

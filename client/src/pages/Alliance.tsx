@@ -1,5 +1,6 @@
 import GameLayout from "@/components/layout/GameLayout";
 import { useGame } from "@/lib/gameContext";
+import { TECH_BRANCH_ASSETS } from "@shared/config";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,8 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
 
 const diplomacyStates = [
   { id: "war", name: "At War", color: "text-red-600 bg-red-50 border-red-200" },
@@ -230,8 +233,8 @@ export default function Alliance() {
                 <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200" data-testid="card-stats-members">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                        <Users className="w-5 h-5 text-blue-600" />
+                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center overflow-hidden">
+                        <img src={TECH_BRANCH_ASSETS.SHIELDS.path} alt="members" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                       </div>
                       <div>
                         <div className="text-xs text-blue-600 uppercase">Members</div>
@@ -244,8 +247,8 @@ export default function Alliance() {
                 <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200" data-testid="card-stats-points">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                        <Trophy className="w-5 h-5 text-purple-600" />
+                      <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center overflow-hidden">
+                        <img src={TECH_BRANCH_ASSETS.COMPUTING.path} alt="points" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                       </div>
                       <div>
                         <div className="text-xs text-purple-600 uppercase">Total Points</div>
@@ -258,8 +261,8 @@ export default function Alliance() {
                 <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200" data-testid="card-stats-wars">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                        <Swords className="w-5 h-5 text-red-600" />
+                      <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center overflow-hidden">
+                        <img src={TECH_BRANCH_ASSETS.WEAPONS.path} alt="wars" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                       </div>
                       <div>
                         <div className="text-xs text-red-600 uppercase">Active Wars</div>
@@ -272,8 +275,8 @@ export default function Alliance() {
                 <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200" data-testid="card-stats-rank">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                        <TrendingUp className="w-5 h-5 text-green-600" />
+                      <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center overflow-hidden">
+                        <img src={TECH_BRANCH_ASSETS.ENGINEERING.path} alt="rank" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                       </div>
                       <div>
                         <div className="text-xs text-green-600 uppercase">Galaxy Rank</div>

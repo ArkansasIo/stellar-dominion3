@@ -3,6 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { PLANET_ASSETS } from "@shared/config";
 import {
   Globe,
   MapPin,
@@ -14,7 +19,7 @@ import {
   Grid3x3,
   Hexagon
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Planet {
   id: string;
@@ -42,14 +47,36 @@ interface Sector {
 
 interface Galaxy {
   id: string;
+  realmId: string;
   name: string;
   coordinates: string;
   sectors: Sector[];
 }
 
+interface RealmServer {
+  id: string;
+  name: string;
+  region: "NA" | "EU" | "APAC";
+  status: "online" | "maintenance" | "degraded";
+  playersOnline: number;
+  maxPlayers: number;
+  tickRateMs: number;
+  uptimePercent: number;
+  universes: string[];
+}
+
+interface RealmResponse {
+  realms: RealmServer[];
+  selectedRealmId: string;
+  selectedRealm: RealmServer;
+}
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
+
 const GALAXIES: Galaxy[] = [
   {
     id: "gal1",
+    realmId: "nexus-alpha",
     name: "Nexus-Alpha",
     coordinates: "[1:0:0]",
     sectors: [
@@ -103,6 +130,7 @@ const GALAXIES: Galaxy[] = [
   },
   {
     id: "gal2",
+    realmId: "cygnus-eu",
     name: "Cyborg-Beta",
     coordinates: "[2:0:0]",
     sectors: [
@@ -127,10 +155,38 @@ const GALAXIES: Galaxy[] = [
 ];
 
 export default function Universe() {
+  const { toast } = useToast();
   const [selectedGalaxy, setSelectedGalaxy] = useState<Galaxy | null>(GALAXIES[0]);
   const [selectedSector, setSelectedSector] = useState<Sector | null>(GALAXIES[0].sectors[0]);
   const [selectedSystem, setSelectedSystem] = useState<System | null>(GALAXIES[0].sectors[0].systems[0]);
   const [searchCoordinates, setSearchCoordinates] = useState("");
+
+  const { data: realmData } = useQuery<RealmResponse>({
+    queryKey: ["/api/universe/realms"],
+    queryFn: async () => {
+      const res = await fetch("/api/universe/realms", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to load realm servers");
+      return res.json();
+    },
+  });
+
+  const selectRealmMutation = useMutation({
+    mutationFn: async (realmId: string) => {
+      const res = await apiRequest("POST", "/api/universe/realms/select", { realmId });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/universe/realms"] });
+      toast({ title: "Realm switched", description: "Universe server realm updated." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Realm switch failed", description: error?.message || "Unknown error", variant: "destructive" });
+    },
+  });
+
+  const selectedRealmId = realmData?.selectedRealmId || "nexus-alpha";
+  const selectedRealm = realmData?.selectedRealm;
+  const filteredGalaxies = GALAXIES.filter((galaxy) => galaxy.realmId === selectedRealmId);
 
   const handleGalaxySelect = (galaxy: Galaxy) => {
     setSelectedGalaxy(galaxy);
@@ -162,6 +218,31 @@ export default function Universe() {
     return "text-green-600";
   };
 
+  const getPlanetImagePath = (planetClass: string) => {
+    const normalized = planetClass.toUpperCase();
+    if (normalized === "M") return PLANET_ASSETS.TERRESTRIAL.EARTH_LIKE.path;
+    if (normalized === "D") return PLANET_ASSETS.TERRESTRIAL.DESERT.path;
+    if (normalized === "R") return PLANET_ASSETS.TERRESTRIAL.VOLCANIC.path;
+    if (normalized === "V") return PLANET_ASSETS.TERRESTRIAL.VOLCANIC.path;
+    if (normalized === "T") return PLANET_ASSETS.TERRESTRIAL.ICE.path;
+    if (normalized === "G") return PLANET_ASSETS.GAS_GIANTS.JUPITER_CLASS.path;
+    if (normalized === "A") return PLANET_ASSETS.EXOTIC.RING_WORLD.path;
+    return PLANET_ASSETS.TERRESTRIAL.EARTH_LIKE.path;
+  };
+
+  useEffect(() => {
+    if (!filteredGalaxies.length) {
+      return;
+    }
+
+    if (!selectedGalaxy || selectedGalaxy.realmId !== selectedRealmId) {
+      const fallbackGalaxy = filteredGalaxies[0];
+      setSelectedGalaxy(fallbackGalaxy);
+      setSelectedSector(fallbackGalaxy.sectors[0]);
+      setSelectedSystem(fallbackGalaxy.sectors[0].systems[0]);
+    }
+  }, [filteredGalaxies, selectedGalaxy, selectedRealmId]);
+
   return (
     <GameLayout>
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -172,7 +253,29 @@ export default function Universe() {
 
         {/* Search Bar */}
         <div className="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
-          <div className="flex gap-2 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-center">
+            <div className="flex flex-col gap-2">
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Realm Server</span>
+              <Select
+                value={selectedRealmId}
+                onValueChange={(value) => selectRealmMutation.mutate(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Realm" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(realmData?.realms || []).map((realm) => (
+                    <SelectItem key={realm.id} value={realm.id}>
+                      {realm.name} · {realm.region}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-2 lg:col-span-2">
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Search Coordinates</span>
+              <div className="flex gap-2 items-center">
             <MapPin className="w-5 h-5 text-slate-600" />
             <Input
               placeholder="Search by coordinates (e.g., [1:1:100:3])"
@@ -181,7 +284,17 @@ export default function Universe() {
               className="flex-1 bg-slate-50 border-slate-200"
               data-testid="input-search-coordinates"
             />
+              </div>
+            </div>
           </div>
+          {selectedRealm && (
+            <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              <div className="bg-slate-50 border border-slate-200 rounded p-2">Region: <span className="font-semibold">{selectedRealm.region}</span></div>
+              <div className="bg-slate-50 border border-slate-200 rounded p-2">Players: <span className="font-semibold">{selectedRealm.playersOnline.toLocaleString()} / {selectedRealm.maxPlayers.toLocaleString()}</span></div>
+              <div className="bg-slate-50 border border-slate-200 rounded p-2">Tick: <span className="font-semibold">{selectedRealm.tickRateMs}ms</span></div>
+              <div className="bg-slate-50 border border-slate-200 rounded p-2">Status: <span className="font-semibold uppercase">{selectedRealm.status}</span></div>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -195,7 +308,7 @@ export default function Universe() {
               <CardDescription>Known Galaxies in Universe</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              {GALAXIES.map(gal => (
+              {filteredGalaxies.map(gal => (
                 <Button
                   key={gal.id}
                   variant={selectedGalaxy?.id === gal.id ? "default" : "outline"}
@@ -292,10 +405,21 @@ export default function Universe() {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${getPlanetColor(planet.class)}`} />
+                      <img
+                        src={getPlanetImagePath(planet.class)}
+                        alt={planet.name}
+                        className="w-12 h-12 rounded object-cover border border-slate-200 bg-slate-100"
+                        onError={(event) => {
+                          event.currentTarget.onerror = null;
+                          event.currentTarget.src = TEMP_THEME_IMAGE;
+                        }}
+                      />
                       <div>
                         <p className="font-semibold text-sm">{planet.name}</p>
-                        <p className="text-xs text-slate-500">{planet.class}-Class</p>
+                        <p className="text-xs text-slate-500 flex items-center gap-1">
+                          <span className={`inline-block w-2 h-2 rounded-full ${getPlanetColor(planet.class)}`} />
+                          {planet.class}-Class
+                        </p>
                       </div>
                     </div>
                     <Badge variant="outline" className="text-xs">{planet.class}</Badge>

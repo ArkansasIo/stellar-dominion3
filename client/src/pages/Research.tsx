@@ -7,8 +7,28 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowUpCircle, Box, Gem, Database, Zap, Info, FlaskConical, Clock, Atom, Microscope, Cog } from "lucide-react";
 import { TECHS, TechItem, TechArea, TechCategory } from "@/lib/techData";
+import { TECH_BRANCH_ASSETS } from "@shared/config";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
+
+function getTechAreaImagePath(area: TechArea, category: TechCategory): string {
+  // Map category first for specificity
+  if (category === "propulsion") return TECH_BRANCH_ASSETS.PROPULSION.path;
+  if (category === "particles" || category === "field_manipulation") return TECH_BRANCH_ASSETS.SHIELDS.path;
+  if (category === "computing") return TECH_BRANCH_ASSETS.COMPUTING.path;
+  if (category === "biology") return TECH_BRANCH_ASSETS.MEDICAL.path;
+  if (category === "statecraft") return TECH_BRANCH_ASSETS.ENGINEERING.path;
+  if (category === "psionics") return TECH_BRANCH_ASSETS.SENSORS.path;
+  if (category === "voidcraft") return TECH_BRANCH_ASSETS.HYPERSPACE.path;
+  if (category === "industry" || category === "materials") return TECH_BRANCH_ASSETS.RESOURCES.path;
+  if (category === "military_theory") return TECH_BRANCH_ASSETS.WEAPONS.path;
+  // Fall back to area
+  if (area === "physics") return TECH_BRANCH_ASSETS.POWER.path;
+  if (area === "society") return TECH_BRANCH_ASSETS.MEDICAL.path;
+  return TECH_BRANCH_ASSETS.ENGINEERING.path;
+}
 
 // Helper for category colors
 const getAreaColor = (area: TechArea) => {
@@ -36,8 +56,6 @@ const ResearchCard = ({
   onUpgrade: (id: string, name: string, time: number) => void, 
   resources: any 
 }) => {
-  const Icon = item.icon;
-  
   const metalCost = Math.floor(item.baseCost.metal * Math.pow(item.costFactor, level));
   const crystalCost = Math.floor(item.baseCost.crystal * Math.pow(item.costFactor, level));
   const deutCost = Math.floor(item.baseCost.deuterium * Math.pow(item.costFactor, level));
@@ -57,11 +75,19 @@ const ResearchCard = ({
   return (
     <Card className={cn("bg-white border-slate-200 transition-all group overflow-hidden shadow-sm flex flex-col h-full", borderColorClass)}>
        <div className={cn("h-32 relative transition-colors duration-500 border-b border-slate-200", areaColorClass.replace("text", "bg").replace("border", "border-transparent"))}>
-          <div className="absolute inset-0 flex items-center justify-center opacity-20">
-            <Icon className="w-20 h-20" />
-          </div>
+          <img
+            src={getTechAreaImagePath(item.area, item.category)}
+            alt={item.name}
+            className="absolute inset-0 w-full h-full object-contain opacity-20 pointer-events-none"
+            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+          />
           <div className="absolute inset-0 flex items-center justify-center z-10">
-            <Icon className={cn("w-16 h-16", item.area === "physics" ? "text-blue-700" : item.area === "society" ? "text-green-700" : "text-orange-700")} />
+            <img
+              src={getTechAreaImagePath(item.area, item.category)}
+              alt={item.name}
+              className={cn("w-16 h-16 object-contain drop-shadow", item.area === "physics" ? "opacity-80" : item.area === "society" ? "opacity-75" : "opacity-70")}
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+            />
           </div>
           <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-mono font-bold shadow-sm border border-slate-200">
             Level {level}

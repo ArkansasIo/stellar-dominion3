@@ -8,6 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Rocket, Users, Landmark, Loader2, Sparkles, ArrowLeft } from "lucide-react";
 import { RACES, RaceId, CLASSES } from "@/lib/commanderTypes";
 import { GOVERNMENTS, GovernmentId } from "@/lib/governmentData";
+import { MENU_ASSETS } from "@shared/config";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
 
 export default function AccountSetup() {
   const { completeSetup, isLoading, commander, government, logout } = useGame();
@@ -93,8 +96,13 @@ export default function AccountSetup() {
       
       <Card className="w-full max-w-lg bg-white border border-slate-300 text-slate-900 relative z-10 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader className="text-center pb-2 border-b border-slate-300">
-          <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Sparkles className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
+            <img
+              src={MENU_ASSETS.NAVIGATION.EMPIRE.path}
+              alt="empire setup"
+              className="w-10 h-10 object-contain"
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+            />
           </div>
           <CardTitle className="text-3xl font-orbitron font-bold tracking-wider text-slate-900">EMPIRE SETUP</CardTitle>
           <CardDescription className="text-slate-700 font-rajdhani text-lg font-medium mt-2">✨ Choose your race and government to begin your conquest</CardDescription>

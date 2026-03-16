@@ -57,6 +57,19 @@ interface ScanResponse {
    };
 }
 
+interface FleetActionPayload {
+   targetName: string;
+   destination: string;
+   missionType: "attack" | "espionage";
+   ships: Record<string, number>;
+}
+
+interface MessageActionPayload {
+   targetName: string;
+   recipientName: string;
+   destination: string;
+}
+
 export default function Galaxy() {
    const { toast } = useToast();
    const [, setLocation] = useLocation();
@@ -112,6 +125,74 @@ export default function Galaxy() {
       },
       onError: (error: Error) => {
          toast({ title: "Deep scan failed", description: error.message, variant: "destructive" });
+      },
+   });
+
+   const fleetActionMutation = useMutation({
+      mutationFn: async (payload: FleetActionPayload) => {
+         const response = await fetch("/api/game/send-fleet", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+               "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+               destination: payload.destination,
+               missionType: payload.missionType,
+               ships: payload.ships,
+            }),
+         });
+
+         const data = await response.json().catch(() => null);
+         if (!response.ok) {
+            throw new Error(data?.error || data?.message || "Fleet dispatch failed");
+         }
+
+         return { ...data, payload };
+      },
+      onSuccess: (result) => {
+         toast({
+            title: "Fleet dispatched",
+            description: result?.message || `${result.payload.missionType} mission launched toward ${result.payload.targetName}.`,
+         });
+         setLocation("/fleet?tab=active");
+      },
+      onError: (error: Error) => {
+         toast({ title: "Fleet dispatch failed", description: error.message, variant: "destructive" });
+      },
+   });
+
+   const messageActionMutation = useMutation({
+      mutationFn: async (payload: MessageActionPayload) => {
+         const response = await fetch("/api/messages", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+               "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+               to: payload.recipientName,
+               subject: `Transmission from ${universe} ${galaxy}:${sector}:${system}`,
+               body: `Scouting transmission for ${payload.targetName} at coordinates ${payload.destination}. Requesting diplomatic channel confirmation.`,
+               type: "player",
+            }),
+         });
+
+         const data = await response.json().catch(() => null);
+         if (!response.ok) {
+            throw new Error(data?.error || data?.message || "Message send failed");
+         }
+
+         return { ...data, payload };
+      },
+      onSuccess: (result) => {
+         toast({
+            title: "Message sent",
+            description: `Transmission delivered to ${result.payload.recipientName}.`,
+         });
+      },
+      onError: (error: Error) => {
+         toast({ title: "Message failed", description: error.message, variant: "destructive" });
       },
    });
 
@@ -303,18 +384,44 @@ export default function Galaxy() {
                                </Button>
                                {(data.type === "planet" || data.type === "station") && (
                                  <>
-                                                      <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600" onClick={() => setLocation("/messages")}><MessageSquare className="w-4 h-4" /></Button>
-                                                      <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-red-50 hover:text-red-600" onClick={() => {
-                                                         setLocation(`/fleet?g=${galaxy}&s=${system}&p=${pos}&mission=attack&targetType=planet`);
-                                                         toast({ title: "Attack prep", description: `Opening Fleet Command for target ${data.name}.` });
-                                                      }}><ShieldAlert className="w-4 h-4" /></Button>
+                                                                                 <Button
+                                                                                    size="icon"
+                                                                                    variant="ghost"
+                                                                                    className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
+                                                                                    onClick={() => messageActionMutation.mutate({
+                                                                                       targetName: data.name || `Position ${pos}`,
+                                                                                       recipientName: data.owner || "",
+                                                                                       destination: `${galaxy}:${system}:${pos}`,
+                                                                                    })}
+                                                                                    disabled={messageActionMutation.isPending || !data.owner}
+                                                                                 ><MessageSquare className="w-4 h-4" /></Button>
+                                                                                 <Button
+                                                                                    size="icon"
+                                                                                    variant="ghost"
+                                                                                    className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                                                                                    onClick={() => fleetActionMutation.mutate({
+                                                                                       targetName: data.name || `Position ${pos}`,
+                                                                                       destination: `${galaxy}:${system}:${pos}`,
+                                                                                       missionType: "attack",
+                                                                                       ships: { lightFighter: 10, cruiser: 2 },
+                                                                                    })}
+                                                                                    disabled={fleetActionMutation.isPending}
+                                                                                 ><ShieldAlert className="w-4 h-4" /></Button>
                                  </>
                                )}
                                {(data.type === "asteroid" || data.type === "blackhole") && (
-                                                   <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-yellow-50 hover:text-yellow-600" onClick={() => {
-                                                      setLocation(`/fleet?g=${galaxy}&s=${system}&p=${pos}&mission=espionage&targetType=debris`);
-                                                      toast({ title: "Fleet routing", description: `Targeting ${data.name} with fleet prefill.` });
-                                                   }}><Rocket className="w-4 h-4" /></Button>
+                                                                            <Button
+                                                                               size="icon"
+                                                                               variant="ghost"
+                                                                               className="h-8 w-8 hover:bg-yellow-50 hover:text-yellow-600"
+                                                                               onClick={() => fleetActionMutation.mutate({
+                                                                                  targetName: data.name || `Position ${pos}`,
+                                                                                  destination: `${galaxy}:${system}:${pos}`,
+                                                                                  missionType: "espionage",
+                                                                                  ships: { espionageProbe: 3, smallCargo: 1 },
+                                                                               })}
+                                                                               disabled={fleetActionMutation.isPending}
+                                                                            ><Rocket className="w-4 h-4" /></Button>
                                )}
                             </div>
                          )}

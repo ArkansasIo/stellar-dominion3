@@ -2,6 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Shield } from "lucide-react";
 import { Link } from "wouter";
+import { MENU_ASSETS } from "@shared/config";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
 
 export default function Privacy() {
   return (
@@ -11,8 +14,13 @@ export default function Privacy() {
       
       <Card className="w-full max-w-2xl bg-white/95 backdrop-blur border-slate-200 text-slate-900 relative z-10 shadow-2xl">
         <CardHeader className="text-center pb-2">
-          <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Shield className="w-6 h-6 text-white" />
+          <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
+            <img
+              src={MENU_ASSETS.STATUS.HEALTHY.path}
+              alt="privacy"
+              className="w-7 h-7 object-contain"
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+            />
           </div>
           <CardTitle className="text-2xl font-orbitron font-bold tracking-wider text-slate-900">Privacy Policy</CardTitle>
         </CardHeader>

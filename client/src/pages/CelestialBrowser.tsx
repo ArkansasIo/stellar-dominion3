@@ -8,6 +8,7 @@ import { Star, Zap, Droplets, Thermometer, Radio, Users } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { PLANET_ASSETS } from "@shared/config";
 
 const SAMPLE_PLANETS = [
   {
@@ -63,6 +64,26 @@ const SAMPLE_STARS = [
     planetsCount: 8,
   },
 ];
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
+
+function getPlanetImagePath(type: string, planetClass: string) {
+  const normalizedType = type.toLowerCase();
+  const normalizedClass = planetClass.toLowerCase();
+  if (normalizedType.includes("desert")) return PLANET_ASSETS.TERRESTRIAL.DESERT.path;
+  if (normalizedType.includes("ice")) return PLANET_ASSETS.TERRESTRIAL.ICE.path;
+  if (normalizedType.includes("ocean")) return PLANET_ASSETS.TERRESTRIAL.OCEAN.path;
+  if (normalizedType.includes("volcanic")) return PLANET_ASSETS.TERRESTRIAL.VOLCANIC.path;
+  if (normalizedClass.includes("gas")) return PLANET_ASSETS.GAS_GIANTS.JUPITER_CLASS.path;
+  return PLANET_ASSETS.TERRESTRIAL.EARTH_LIKE.path;
+}
+
+function getStarImagePath(starClass: string) {
+  const normalized = starClass.toUpperCase();
+  if (normalized === "G") return PLANET_ASSETS.EXOTIC.DYSON_SPHERE.path;
+  if (normalized === "M") return PLANET_ASSETS.EXOTIC.RING_WORLD.path;
+  return PLANET_ASSETS.EXOTIC.DYSON_SPHERE.path;
+}
 
 export default function CelestialBrowser() {
   const [, setLocation] = useLocation();
@@ -120,9 +141,20 @@ export default function CelestialBrowser() {
                             <Card key={planet.id} className="border-slate-200" data-testid={`planet-card-${planet.id}`}>
                               <CardContent className="pt-4">
                                 <div className="flex items-start justify-between mb-3">
-                                  <div>
-                                    <h4 className="font-bold text-slate-900">{planet.name}</h4>
-                                    <p className="text-xs text-slate-500">{planet.coordinates}</p>
+                                  <div className="flex items-center gap-3">
+                                    <img
+                                      src={getPlanetImagePath(planet.type, planet.class)}
+                                      alt={planet.name}
+                                      className="w-14 h-14 rounded object-cover border border-slate-200 bg-slate-100"
+                                      onError={(event) => {
+                                        event.currentTarget.onerror = null;
+                                        event.currentTarget.src = TEMP_THEME_IMAGE;
+                                      }}
+                                    />
+                                    <div>
+                                      <h4 className="font-bold text-slate-900">{planet.name}</h4>
+                                      <p className="text-xs text-slate-500">{planet.coordinates}</p>
+                                    </div>
                                   </div>
                                   <div className="flex gap-2">
                                     <Badge variant="outline">{planet.type}</Badge>
@@ -197,7 +229,15 @@ export default function CelestialBrowser() {
                               <CardContent className="pt-4">
                                 <div className="flex items-start justify-between mb-2">
                                   <div className="flex items-center gap-2">
-                                    <Star className="w-5 h-5 text-yellow-500" />
+                                    <img
+                                      src={getStarImagePath(star.class)}
+                                      alt={star.name}
+                                      className="w-10 h-10 rounded object-cover border border-slate-200 bg-slate-100"
+                                      onError={(event) => {
+                                        event.currentTarget.onerror = null;
+                                        event.currentTarget.src = TEMP_THEME_IMAGE;
+                                      }}
+                                    />
                                     <div>
                                       <h4 className="font-bold text-slate-900">{star.name}</h4>
                                       <p className="text-xs text-slate-500">Class {star.class} {star.type}</p>
@@ -239,7 +279,18 @@ export default function CelestialBrowser() {
                 {filteredPlanets.map((planet) => (
                   <Card key={planet.id} className="border-slate-200">
                     <CardContent className="pt-4">
-                      <h4 className="font-bold mb-2">{planet.name}</h4>
+                      <div className="flex items-center gap-2 mb-2">
+                        <img
+                          src={getPlanetImagePath(planet.type, planet.class)}
+                          alt={planet.name}
+                          className="w-8 h-8 rounded object-cover border border-slate-200 bg-slate-100"
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = TEMP_THEME_IMAGE;
+                          }}
+                        />
+                        <h4 className="font-bold">{planet.name}</h4>
+                      </div>
                       <Button size="sm" className="w-full" onClick={() => setLocation(`/planet/${planet.id}`)}>
                         View Details
                       </Button>
@@ -253,7 +304,15 @@ export default function CelestialBrowser() {
                   <Card key={star.id} className="border-slate-200">
                     <CardContent className="pt-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <Star className="w-4 h-4 text-yellow-500" />
+                        <img
+                          src={getStarImagePath(star.class)}
+                          alt={star.name}
+                          className="w-8 h-8 rounded object-cover border border-slate-200 bg-slate-100"
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = TEMP_THEME_IMAGE;
+                          }}
+                        />
                         <h4 className="font-bold">{star.name}</h4>
                       </div>
                       <Button

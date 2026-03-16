@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { MENU_ASSETS } from "@shared/config";
 import { MARKET_ITEMS, VENDORS, MarketItem, Vendor } from "@/lib/marketData";
 import { 
   ShoppingBag, AlertTriangle, Zap, User, Shield, Box, Gem, Database, 
@@ -21,6 +22,8 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
 
 type MarketTab = "market" | "auction" | "exchange" | "history" | "prices";
 
@@ -586,8 +589,8 @@ const AuctionHouseContent = () => {
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                <Gavel className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center overflow-hidden">
+                <img src={MENU_ASSETS.BUILDINGS.TRADE_STATION.path} alt="auctions" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
               </div>
               <div>
                 <div className="text-xs text-blue-600 uppercase">Active Auctions</div>
@@ -599,8 +602,8 @@ const AuctionHouseContent = () => {
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                <Tag className="w-5 h-5 text-green-600" />
+              <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center overflow-hidden">
+                <img src={MENU_ASSETS.RESOURCES.SCIENCE.path} alt="listings" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
               </div>
               <div>
                 <div className="text-xs text-green-600 uppercase">My Listings</div>
@@ -612,8 +615,8 @@ const AuctionHouseContent = () => {
         <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                <Coins className="w-5 h-5 text-purple-600" />
+              <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center overflow-hidden">
+                <img src={MENU_ASSETS.RESOURCES.CREDITS.path} alt="bids" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
               </div>
               <div>
                 <div className="text-xs text-purple-600 uppercase">My Active Bids</div>
@@ -625,8 +628,8 @@ const AuctionHouseContent = () => {
         <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
-                <Timer className="w-5 h-5 text-amber-600" />
+              <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center overflow-hidden">
+                <img src={MENU_ASSETS.RESOURCES.ENERGY.path} alt="ending soon" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
               </div>
               <div>
                 <div className="text-xs text-amber-600 uppercase">Ending Soon</div>
@@ -841,8 +844,8 @@ export default function Market() {
           <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200" data-testid="card-stats-metal">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-slate-500/10 flex items-center justify-center">
-                  <Box className="w-5 h-5 text-slate-600" />
+                <div className="w-10 h-10 rounded-full bg-slate-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={MENU_ASSETS.RESOURCES.METAL.path} alt="metal" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-slate-600 uppercase">Metal</div>
@@ -855,8 +858,8 @@ export default function Market() {
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200" data-testid="card-stats-crystal">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <Gem className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={MENU_ASSETS.RESOURCES.CRYSTAL.path} alt="crystal" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-blue-600 uppercase">Crystal</div>
@@ -869,8 +872,8 @@ export default function Market() {
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200" data-testid="card-stats-deuterium">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <Database className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={MENU_ASSETS.RESOURCES.DEUTERIUM.path} alt="deuterium" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-green-600 uppercase">Deuterium</div>
@@ -883,8 +886,8 @@ export default function Market() {
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200" data-testid="card-stats-trades">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                  <History className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={MENU_ASSETS.BUILDINGS.TRADE_STATION.path} alt="trades" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-purple-600 uppercase">Today's Trades</div>

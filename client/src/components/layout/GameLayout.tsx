@@ -3,6 +3,7 @@ import { useGame } from "@/lib/gameContext";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { PLANET_ASSETS } from "@shared/config";
 import { 
   LayoutDashboard, 
   Pickaxe, 
@@ -47,6 +48,8 @@ import {
   Network,
   AlertTriangle,
   Image,
+  Award,
+  Store,
 } from "lucide-react";
 
 const SidebarItem = ({ href, icon: Icon, label, active, className, indent = false }: { href: string, icon: any, label: string, active: boolean, className?: string, indent?: boolean }) => (
@@ -155,6 +158,11 @@ const TurnDisplay = ({ currentTurns, totalTurns, isLoading }: { currentTurns: nu
 export default function GameLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { resources, planetName, coordinates, isAdmin, logout, username } = useGame();
+  const appVersion = import.meta.env.VITE_APP_VERSION || "1.0.0";
+  const buildId = import.meta.env.VITE_BUILD_ID || "dev";
+  const buildTime = import.meta.env.VITE_BUILD_TIME || "local";
+  const sidebarPlanetImage = PLANET_ASSETS.TERRESTRIAL.EARTH_LIKE.path;
+  const fallbackPlanetImage = "/theme-temp.png";
 
   const { data: turnData, isLoading: turnsLoading } = useQuery({
     queryKey: ['/api/turns'],
@@ -200,8 +208,16 @@ export default function GameLayout({ children }: { children: React.ReactNode }) 
           
           <div className="p-6">
              <div className="bg-slate-100 border border-slate-200 p-4 rounded text-center">
-                <div className="w-16 h-16 mx-auto bg-white rounded-full border-2 border-primary mb-3 shadow-sm flex items-center justify-center">
-                  <Globe className="w-8 h-8 text-primary" />
+                <div className="w-16 h-16 mx-auto bg-white rounded-full border-2 border-primary mb-3 shadow-sm overflow-hidden">
+                  <img
+                    src={sidebarPlanetImage}
+                    alt={planetName || "Planet"}
+                    className="w-full h-full object-cover"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = fallbackPlanetImage;
+                    }}
+                  />
                 </div>
                 <h3 className="font-orbitron font-bold text-slate-900">{planetName}</h3>
                 <p className="text-xs text-muted-foreground">[{coordinates}]</p>
@@ -283,9 +299,11 @@ export default function GameLayout({ children }: { children: React.ReactNode }) 
               location={location}
               items={[
                 { href: "/commander", icon: User, label: "Commander" },
+                { href: "/season-pass", icon: Award, label: "Season Pass" },
                 { href: "/government", icon: Landmark, label: "Government" },
                 { href: "/factions", icon: Users, label: "Factions" },
                 { href: "/alliance", icon: Shield, label: "Alliance" },
+                { href: "/leaderboard", icon: Trophy, label: "Leaderboard" },
                 { href: "/messages", icon: Mail, label: "Messages" },
               ]}
             />
@@ -298,6 +316,7 @@ export default function GameLayout({ children }: { children: React.ReactNode }) 
               items={[
                 { href: "/market", icon: ShoppingBag, label: "Market" },
                 { href: "/merchants", icon: User, label: "Merchants" },
+                { href: "/storefront", icon: Store, label: "Storefront" },
                 { href: "/achievements", icon: Trophy, label: "Achievements" },
               ]}
             />
@@ -335,6 +354,15 @@ export default function GameLayout({ children }: { children: React.ReactNode }) 
            </div>
         </main>
       </div>
+
+      <footer className="h-8 border-t border-slate-200 bg-white px-6 flex items-center justify-between text-[11px] text-slate-500 font-mono" data-testid="footer-build-info">
+        <div>STELLAR DOMINION</div>
+        <div className="flex items-center gap-4">
+          <span>Version: {appVersion}</span>
+          <span>Build: {buildId}</span>
+          <span>Time: {buildTime}</span>
+        </div>
+      </footer>
     </div>
   );
 }

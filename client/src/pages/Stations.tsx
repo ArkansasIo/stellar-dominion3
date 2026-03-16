@@ -4,10 +4,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ORBITAL_BUILDINGS, StationBuilding } from "@/lib/stationData";
+import { MENU_ASSETS } from "@shared/config";
 import { Satellite, Moon, Building2, Clock, Box, Gem, Database, TrendingUp, Hammer } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type StationsTab = "moon" | "station";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
+
+const STATION_IMAGE_MAP: Record<string, string> = {
+  moonBase:       MENU_ASSETS.BUILDINGS.SPACEPORT.path,
+  sensorPhalanx:  MENU_ASSETS.BUILDINGS.DEFENSE_TURRET.path,
+  jumpGate:       MENU_ASSETS.BUILDINGS.SPACEPORT.path,
+  spaceStation:   MENU_ASSETS.BUILDINGS.SPACEPORT.path,
+  fleetAcademy:   MENU_ASSETS.BUILDINGS.SHIPYARD.path,
+  allianceDepot:  MENU_ASSETS.BUILDINGS.TRADE_STATION.path,
+};
 
 function formatTime(seconds: number): string {
   if (seconds >= 86400) {
@@ -21,7 +33,7 @@ function formatTime(seconds: number): string {
 }
 
 function BuildingCard({ building, level = 0 }: { building: StationBuilding; level?: number }) {
-  const Icon = building.icon;
+  const imagePath = STATION_IMAGE_MAP[building.id] ?? MENU_ASSETS.BUILDINGS.SPACEPORT.path;
   const cost = {
     metal: Math.round(building.baseCost.metal * Math.pow(building.costFactor, level)),
     crystal: Math.round(building.baseCost.crystal * Math.pow(building.costFactor, level)),
@@ -42,8 +54,13 @@ function BuildingCard({ building, level = 0 }: { building: StationBuilding; leve
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white rounded-lg border border-slate-200">
-              <Icon className="w-6 h-6 text-primary" />
+            <div className="p-2 bg-white rounded-lg border border-slate-200 w-12 h-12 flex items-center justify-center overflow-hidden">
+              <img
+                src={imagePath}
+                alt={building.name}
+                className="w-9 h-9 object-contain"
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+              />
             </div>
             <div>
               <CardTitle className="text-lg">{building.name}</CardTitle>

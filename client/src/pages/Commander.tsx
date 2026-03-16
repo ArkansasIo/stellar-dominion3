@@ -1,5 +1,6 @@
 import GameLayout from "@/components/layout/GameLayout";
 import { useGame } from "@/lib/gameContext";
+import { TECH_BRANCH_ASSETS } from "@shared/config";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +34,15 @@ import {
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
+import {
+   COMMANDER_MAX_LEVEL,
+   COMMANDER_MAX_TIER,
+   type CommanderTalentNode,
+} from "@shared/config/commanderTalentTreeConfig";
 
 const ItemCard = ({ item, onEquip, onTemper }: { item: Item, onEquip?: (item: Item) => void, onTemper?: (id: string) => void }) => (
    <div className={cn(
@@ -115,6 +125,24 @@ const skillDefinitions = [
    { id: "construction_expert", stat: "engineering" as const, name: "Construction Expert", maxLevel: 10, desc: "-3% build time per level" },
 ];
 
+interface CommanderTalentTreeResponse {
+   tree: {
+      nodes: CommanderTalentNode[];
+   };
+   progression: {
+      level: number;
+      tier: number;
+      title: {
+         title: string;
+         badge: string;
+      };
+      unlockedNodes: Record<string, number>;
+      spentPoints: number;
+      totalPoints: number;
+      availablePoints: number;
+   };
+}
+
 export default function Commander() {
    const { toast } = useToast();
    const { commander, equipItem, unequipItem, craftItem, temperItem, setCommanderIdentity, upgradeCommanderSkill } = useGame();
@@ -129,11 +157,43 @@ export default function Commander() {
    const [selectedEquipmentType, setSelectedEquipmentType] = useState<CommanderEquipmentType>("weapon");
    const [selectedLeaderType, setSelectedLeaderType] = useState<string>("all");
    const [selectedLeaderClass, setSelectedLeaderClass] = useState<string>("all");
+   const [selectedTalentTier, setSelectedTalentTier] = useState<number>(1);
 
    const leaderTypes = Array.from(new Set(GOVERNMENT_LEADER_TYPES_23.map(leader => leader.type)));
    const leaderClasses = Array.from(new Set(GOVERNMENT_LEADER_TYPES_23.map(leader => leader.class)));
    const leadersByType = selectedLeaderType === "all" ? GOVERNMENT_LEADER_TYPES_23 : getGovernmentLeadersByType(selectedLeaderType);
    const filteredGovernmentLeaders = selectedLeaderClass === "all" ? leadersByType : leadersByType.filter(leader => getGovernmentLeadersByClass(selectedLeaderClass).some(match => match.id === leader.id));
+
+   const { data: talentTreeData, isLoading: talentTreeLoading } = useQuery<CommanderTalentTreeResponse>({
+      queryKey: ["/api/commander/talent/tree"],
+      queryFn: async () => {
+         const res = await fetch("/api/commander/talent/tree", { credentials: "include" });
+         if (!res.ok) throw new Error("Failed to load commander talent tree");
+         return res.json();
+      },
+   });
+
+   const unlockTalentMutation = useMutation({
+      mutationFn: async (nodeId: string) => {
+         const res = await apiRequest("POST", "/api/commander/talent/unlock", { nodeId });
+         return res.json();
+      },
+      onSuccess: () => {
+         queryClient.invalidateQueries({ queryKey: ["/api/commander/talent/tree"] });
+         toast({ title: "Talent unlocked", description: "Commander talent point spent successfully." });
+      },
+      onError: (error: any) => {
+         toast({ title: "Unable to unlock talent", description: error?.message || "Unknown error", variant: "destructive" });
+      },
+   });
+
+   const talentNodesByBranch = (talentTreeData?.tree?.nodes || []).reduce<Record<string, CommanderTalentNode[]>>((acc, node) => {
+      if (!acc[node.branch]) {
+         acc[node.branch] = [];
+      }
+      acc[node.branch].push(node);
+      return acc;
+   }, {});
 
    const skills = skillDefinitions.map((skill) => ({
       ...skill,
@@ -159,8 +219,8 @@ export default function Commander() {
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200" data-testid="card-stats-level">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                  <Star className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.COMPUTING.path} alt="level" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-purple-600 uppercase">Commander Level</div>
@@ -173,8 +233,8 @@ export default function Commander() {
           <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200" data-testid="card-stats-xp">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-yellow-600" />
+                <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.POWER.path} alt="xp" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-yellow-600 uppercase">Experience</div>
@@ -187,8 +247,8 @@ export default function Commander() {
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200" data-testid="card-stats-skills">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <Target className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.ENGINEERING.path} alt="skills" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                            <div className="text-xs text-green-600 uppercase">Available Skill Points</div>
@@ -201,8 +261,8 @@ export default function Commander() {
           <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200" data-testid="card-stats-achievements">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                  <Trophy className="w-5 h-5 text-orange-600" />
+                <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.SENSORS.path} alt="achievements" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-orange-600 uppercase">Achievements</div>
@@ -217,6 +277,7 @@ export default function Commander() {
           <TabsList className="bg-white border border-slate-200 h-12 w-full justify-start overflow-x-auto">
             <TabsTrigger value="profile" className="font-orbitron" data-testid="tab-profile"><User className="w-4 h-4 mr-2" /> Profile</TabsTrigger>
             <TabsTrigger value="skills" className="font-orbitron" data-testid="tab-skills"><Target className="w-4 h-4 mr-2" /> Skills</TabsTrigger>
+                  <TabsTrigger value="talentTree" className="font-orbitron" data-testid="tab-talent-tree"><History className="w-4 h-4 mr-2" /> Talent Tree</TabsTrigger>
             <TabsTrigger value="achievements" className="font-orbitron" data-testid="tab-achievements"><Trophy className="w-4 h-4 mr-2" /> Achievements</TabsTrigger>
             <TabsTrigger value="identity" className="font-orbitron" data-testid="tab-identity"><Dna className="w-4 h-4 mr-2" /> Identity</TabsTrigger>
             <TabsTrigger value="leaders" className="font-orbitron" data-testid="tab-leaders"><Crown className="w-4 h-4 mr-2" /> Gov Leaders</TabsTrigger>
@@ -370,6 +431,128 @@ export default function Commander() {
                          <div className="text-3xl font-mono font-bold text-green-600">{availableSkillPoints}</div>
                       </div>
                    </div>
+                </CardContent>
+             </Card>
+          </TabsContent>
+
+          <TabsContent value="talentTree" className="mt-6">
+             <Card className="bg-white border-slate-200" data-testid="card-talent-tree">
+                <CardHeader>
+                   <CardTitle className="flex items-center gap-2 text-slate-900">
+                      <History className="w-5 h-5 text-indigo-600" /> Commander Talent Tree
+                   </CardTitle>
+                   <CardDescription>Progression supports level 1-{COMMANDER_MAX_LEVEL} and tier 1-{COMMANDER_MAX_TIER}.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                   {talentTreeLoading ? (
+                      <div className="text-sm text-slate-500">Loading talent tree...</div>
+                   ) : (
+                      <>
+                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="bg-slate-50 border border-slate-200 rounded p-3">
+                               <div className="text-xs uppercase text-slate-500">Level</div>
+                               <div className="text-2xl font-orbitron text-slate-900">{talentTreeData?.progression.level || 1}</div>
+                            </div>
+                            <div className="bg-slate-50 border border-slate-200 rounded p-3">
+                               <div className="text-xs uppercase text-slate-500">Tier</div>
+                               <div className="text-2xl font-orbitron text-slate-900">{talentTreeData?.progression.tier || 1}</div>
+                            </div>
+                            <div className="bg-slate-50 border border-slate-200 rounded p-3">
+                               <div className="text-xs uppercase text-slate-500">Title</div>
+                               <div className="text-base font-semibold text-slate-900">
+                                  {talentTreeData?.progression.title?.badge || "🟢"} {talentTreeData?.progression.title?.title || "Cadet"}
+                               </div>
+                            </div>
+                            <div className="bg-green-50 border border-green-200 rounded p-3">
+                               <div className="text-xs uppercase text-green-600">Talent Points</div>
+                               <div className="text-2xl font-orbitron text-green-900">{talentTreeData?.progression.availablePoints || 0}</div>
+                            </div>
+                         </div>
+
+                         <div className="space-y-4">
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border border-slate-200 rounded p-3 bg-white">
+                               <div>
+                                  <div className="text-xs uppercase text-slate-500">Viewing Tier</div>
+                                  <div className="text-lg font-orbitron text-slate-900">{selectedTalentTier} / {COMMANDER_MAX_TIER}</div>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                  <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={() => setSelectedTalentTier((current) => Math.max(1, current - 1))}
+                                     disabled={selectedTalentTier <= 1}
+                                  >
+                                     Prev
+                                  </Button>
+                                  <Select
+                                     value={String(selectedTalentTier)}
+                                     onValueChange={(value) => setSelectedTalentTier(Number(value))}
+                                  >
+                                     <SelectTrigger className="w-40">
+                                        <SelectValue />
+                                     </SelectTrigger>
+                                     <SelectContent>
+                                        {Array.from({ length: COMMANDER_MAX_TIER }, (_, index) => index + 1).map((tierValue) => (
+                                           <SelectItem key={`talent-tier-${tierValue}`} value={String(tierValue)}>
+                                              Tier {tierValue}
+                                           </SelectItem>
+                                        ))}
+                                     </SelectContent>
+                                  </Select>
+                                  <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={() => setSelectedTalentTier((current) => Math.min(COMMANDER_MAX_TIER, current + 1))}
+                                     disabled={selectedTalentTier >= COMMANDER_MAX_TIER}
+                                  >
+                                     Next
+                                  </Button>
+                               </div>
+                            </div>
+
+                            {Object.entries(talentNodesByBranch).map(([branch, nodes]) => (
+                               <div key={branch} className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                                  <div className="font-bold text-slate-900 capitalize mb-3">{branch}</div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                     {nodes
+                                     .filter((node) => node.tier === selectedTalentTier)
+                                     .map((node) => {
+                                        const currentRank = talentTreeData?.progression.unlockedNodes?.[node.id] || 0;
+                                        const unlocked = currentRank > 0;
+                                        const maxed = currentRank >= node.maxRank;
+                                        const hasLevel = (talentTreeData?.progression.level || 1) >= node.requiredLevel;
+                                        const prereqsMet = node.prerequisiteNodeIds.every((prereq) => (talentTreeData?.progression.unlockedNodes?.[prereq] || 0) > 0);
+                                        const canUnlock = !maxed && hasLevel && prereqsMet && (talentTreeData?.progression.availablePoints || 0) > 0;
+
+                                        return (
+                                           <Card key={node.id} className={cn("border", unlocked ? "border-indigo-300 bg-indigo-50/40" : "border-slate-200 bg-white")}>
+                                              <CardContent className="p-3 space-y-2">
+                                                 <div className="flex items-start justify-between gap-2">
+                                                    <div>
+                                                       <div className="text-sm font-semibold text-slate-900">{node.name}</div>
+                                                       <div className="text-xs text-slate-500">Tier {node.tier} · Req Lv {node.requiredLevel}</div>
+                                                    </div>
+                                                    <Badge variant="outline">{currentRank}/{node.maxRank}</Badge>
+                                                 </div>
+                                                 <div className="text-xs text-slate-600">{node.description}</div>
+                                                 <Button
+                                                    size="sm"
+                                                    className="w-full"
+                                                    disabled={!canUnlock || unlockTalentMutation.isPending}
+                                                    onClick={() => unlockTalentMutation.mutate(node.id)}
+                                                 >
+                                                    {maxed ? "Max Rank" : canUnlock ? "Unlock Rank" : "Locked"}
+                                                 </Button>
+                                              </CardContent>
+                                           </Card>
+                                        );
+                                     })}
+                                  </div>
+                               </div>
+                            ))}
+                         </div>
+                      </>
+                   )}
                 </CardContent>
              </Card>
           </TabsContent>

@@ -1,5 +1,6 @@
 import GameLayout from "@/components/layout/GameLayout";
 import { useGame } from "@/lib/gameContext";
+import { TECH_BRANCH_ASSETS, SHIP_ASSETS } from "@shared/config";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,8 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
+const TEMP_THEME_IMAGE = "/theme-temp.png";
+
 export default function Combat() {
   const { units, resources, research, buildings } = useGame();
   const { toast } = useToast();
@@ -19,6 +22,7 @@ export default function Combat() {
   const [combatType, setCombatType] = useState<"raid" | "attack" | "spy" | "sabotage">("attack");
   const [selectedUnits, setSelectedUnits] = useState<{ [key: string]: number }>({});
   const [battleResult, setBattleResult] = useState<any>(null);
+  const [attackError, setAttackError] = useState<string | null>(null);
 
   // Fetch combat stats
   const { data: combatStats, isLoading: statsLoading } = useQuery({
@@ -62,11 +66,17 @@ export default function Combat() {
       }
       return res.json();
     },
+    onMutate: () => {
+      setAttackError(null);
+    },
     onSuccess: (data) => {
       setBattleResult(data);
       setSelectedUnits({});
+      setAttackError(null);
+      toast({ title: "Attack resolved", description: `Engagement completed against ${targetId.trim()}.` });
     },
     onError: (error: any) => {
+      setAttackError(error.message || "Attack failed");
       toast({ title: "Attack failed", description: error.message, variant: "destructive" });
     },
   });
@@ -91,8 +101,8 @@ export default function Combat() {
           <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                  <Sword className="w-5 h-5 text-red-600" />
+                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.WEAPONS.path} alt="attack" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-red-600 uppercase">Attack Power</div>
@@ -107,8 +117,8 @@ export default function Combat() {
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.SHIELDS.path} alt="defense" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-blue-600 uppercase">Defense Bonus</div>
@@ -123,8 +133,8 @@ export default function Combat() {
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={SHIP_ASSETS.FIGHTERS.FIGHTER.path} alt="fleet" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-green-600 uppercase">Total Fleet</div>
@@ -139,8 +149,8 @@ export default function Combat() {
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                  <Trophy className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.COMPUTING.path} alt="victories" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-purple-600 uppercase">Victories</div>
@@ -211,12 +221,20 @@ export default function Combat() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {attackError && (
+                    <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700" data-testid="combat-attack-error">
+                      {attackError}
+                    </div>
+                  )}
                   <div>
                     <label className="text-sm font-bold text-slate-900 block mb-2">Target Player ID</label>
                     <Input
                       placeholder="Enter target player ID"
                       value={targetId}
-                      onChange={(e) => setTargetId(e.target.value)}
+                      onChange={(e) => {
+                        setTargetId(e.target.value);
+                        if (attackError) setAttackError(null);
+                      }}
                       className="font-mono"
                     />
                   </div>
@@ -245,6 +263,7 @@ export default function Combat() {
                                     ...prev,
                                     [unitType]: parseInt(e.target.value),
                                   }));
+                                  if (attackError) setAttackError(null);
                                 }}
                                 className="w-32 h-2 bg-slate-200 rounded cursor-pointer"
                               />
@@ -260,7 +279,7 @@ export default function Combat() {
 
                   <Button
                     onClick={() => attackMutation.mutate()}
-                    disabled={attackMutation.isPending}
+                    disabled={attackMutation.isPending || totalSelected === 0 || !targetId.trim()}
                     className="w-full bg-red-600 hover:bg-red-700 text-white font-orbitron"
                   >
                     {attackMutation.isPending ? "Battle In Progress..." : `Launch Attack (${totalSelected} units)`}

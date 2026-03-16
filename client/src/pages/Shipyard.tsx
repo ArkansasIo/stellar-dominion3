@@ -14,6 +14,30 @@ import {
 import { useState, useEffect } from "react";
 import { unitData, UnitItem } from "@/lib/unitData";
 import { cn } from "@/lib/utils";
+import { MENU_ASSETS, SHIP_ASSETS } from "@shared/config";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
+
+function getUnitImagePath(item: UnitItem) {
+  if (item.id === "interceptor") return SHIP_ASSETS.FIGHTERS.INTERCEPTOR.path;
+  if (item.id === "heavyFighter") return SHIP_ASSETS.FIGHTERS.FIGHTER.path;
+  if (item.id === "lightFighter") return SHIP_ASSETS.FIGHTERS.SCOUT.path;
+
+  if (item.id === "battleship") return SHIP_ASSETS.CAPITALS.BATTLESHIP.path;
+  if (item.id === "battlecruiser") return SHIP_ASSETS.CAPITALS.BATTLECRUISER.path;
+  if (item.id === "destroyer") return SHIP_ASSETS.CAPITALS.DESTROYER.path;
+  if (item.id === "cruiser" || item.id === "bomber") return SHIP_ASSETS.CAPITALS.CORVETTE.path;
+
+  if (item.id === "colonyShip") return SHIP_ASSETS.SPECIAL.COLONIZER.path;
+  if (item.id === "smallCargo" || item.id === "largeCargo" || item.id === "recycler") return SHIP_ASSETS.SPECIAL.TRANSPORT.path;
+  if (item.id === "espionageProbe") return SHIP_ASSETS.FIGHTERS.SCOUT.path;
+
+  if (item.class === "super" || item.class === "titan") return SHIP_ASSETS.SPECIAL.CARRIER.path;
+  if (item.class === "troop") return SHIP_ASSETS.SPECIAL.TRANSPORT.path;
+  if (item.class === "vehicle") return SHIP_ASSETS.CAPITALS.CORVETTE.path;
+
+  return SHIP_ASSETS.FIGHTERS.FIGHTER.path;
+}
 
 const UnitCard = ({ 
   item, 
@@ -29,7 +53,6 @@ const UnitCard = ({
   buildings: any
 }) => {
   const [amount, setAmount] = useState(1);
-  const Icon = item.icon;
   
   const totalMetal = item.cost.metal * amount;
   const totalCrystal = item.cost.crystal * amount;
@@ -53,7 +76,15 @@ const UnitCard = ({
     <Card className={cn("bg-white border-slate-200 hover:border-primary/50 transition-all group overflow-hidden shadow-sm flex flex-col h-full", !meetsRequirement && "opacity-60")} data-testid={`card-unit-${item.id}`}>
        <div className={cn("h-28 bg-gradient-to-br from-slate-50 to-slate-100 relative border-b border-slate-200", item.class === "titan" && "from-red-50 to-red-100", item.class === "super" && "from-purple-50 to-purple-100")}>
           <div className="absolute inset-0 flex items-center justify-center">
-            <Icon className={cn("w-14 h-14 text-slate-300 group-hover:text-primary/30 transition-colors", item.class === "titan" && "text-red-300", item.class === "super" && "text-purple-300")} />
+            <img
+              src={getUnitImagePath(item)}
+              alt={item.name}
+              className="w-20 h-20 object-contain"
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = TEMP_THEME_IMAGE;
+              }}
+            />
           </div>
           <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded text-xs font-mono text-primary border border-slate-200 shadow-sm">
             Owned: {count}
@@ -195,8 +226,16 @@ export default function Shipyard() {
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200" data-testid="card-stats-fleet-power">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <Target className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={SHIP_ASSETS.CAPITALS.BATTLECRUISER.path}
+                    alt="Fleet power"
+                    className="w-8 h-8 object-contain"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = TEMP_THEME_IMAGE;
+                    }}
+                  />
                 </div>
                 <div>
                   <div className="text-xs text-blue-600 uppercase">Total Fleet Power</div>
@@ -209,8 +248,16 @@ export default function Shipyard() {
           <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200" data-testid="card-stats-total-ships">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-slate-500/10 flex items-center justify-center">
-                  <Rocket className="w-5 h-5 text-slate-600" />
+                <div className="w-10 h-10 rounded-full bg-slate-500/10 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={SHIP_ASSETS.FIGHTERS.FIGHTER.path}
+                    alt="Total ships"
+                    className="w-8 h-8 object-contain"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = TEMP_THEME_IMAGE;
+                    }}
+                  />
                 </div>
                 <div>
                   <div className="text-xs text-slate-600 uppercase">Total Ships</div>
@@ -223,8 +270,16 @@ export default function Shipyard() {
           <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200" data-testid="card-stats-shipyard">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                  <Hammer className="w-5 h-5 text-orange-600" />
+                <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={MENU_ASSETS.BUILDINGS.SHIPYARD.path}
+                    alt="Shipyard"
+                    className="w-7 h-7 object-contain"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = TEMP_THEME_IMAGE;
+                    }}
+                  />
                 </div>
                 <div>
                   <div className="text-xs text-orange-600 uppercase">Shipyard Level</div>
@@ -237,8 +292,16 @@ export default function Shipyard() {
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200" data-testid="card-stats-in-production">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={SHIP_ASSETS.SPECIAL.TRANSPORT.path}
+                    alt="In production"
+                    className="w-8 h-8 object-contain"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = TEMP_THEME_IMAGE;
+                    }}
+                  />
                 </div>
                 <div>
                   <div className="text-xs text-green-600 uppercase">In Production</div>
@@ -263,7 +326,15 @@ export default function Shipyard() {
                       return (
                          <div key={i} className="flex items-center gap-4 bg-slate-50 p-3 rounded border border-slate-100">
                             <div className="w-10 h-10 flex items-center justify-center bg-white rounded border border-slate-200">
-                               <Rocket className="w-5 h-5 text-primary" />
+                               <img
+                                 src={SHIP_ASSETS.SPECIAL.TRANSPORT.path}
+                                 alt="Queue item"
+                                 className="w-8 h-8 object-contain"
+                                 onError={(event) => {
+                                   event.currentTarget.onerror = null;
+                                   event.currentTarget.src = TEMP_THEME_IMAGE;
+                                 }}
+                               />
                             </div>
                             <div className="flex-1">
                                <div className="flex justify-between text-sm font-medium text-slate-900 mb-1">
@@ -295,7 +366,15 @@ export default function Shipyard() {
                <Card className="mb-6 bg-slate-50 border-slate-200" data-testid="card-combat-info">
                  <CardContent className="p-4">
                    <div className="flex items-center gap-4">
-                     <Sword className="w-8 h-8 text-slate-400" />
+                     <img
+                       src={SHIP_ASSETS.CAPITALS.DESTROYER.path}
+                       alt="Combat fleet"
+                       className="w-10 h-10 object-contain"
+                       onError={(event) => {
+                         event.currentTarget.onerror = null;
+                         event.currentTarget.src = TEMP_THEME_IMAGE;
+                       }}
+                     />
                      <div>
                        <div className="font-bold text-slate-900">Combat Fleet</div>
                        <div className="text-sm text-slate-500">Fighters and capital ships for offensive and defensive operations. Upgrade your Shipyard to unlock advanced vessels.</div>
@@ -314,7 +393,15 @@ export default function Shipyard() {
                <Card className="mb-6 bg-blue-50 border-blue-200" data-testid="card-civil-info">
                  <CardContent className="p-4">
                    <div className="flex items-center gap-4">
-                     <Box className="w-8 h-8 text-blue-400" />
+                     <img
+                       src={SHIP_ASSETS.SPECIAL.TRANSPORT.path}
+                       alt="Civil fleet"
+                       className="w-10 h-10 object-contain"
+                       onError={(event) => {
+                         event.currentTarget.onerror = null;
+                         event.currentTarget.src = TEMP_THEME_IMAGE;
+                       }}
+                     />
                      <div>
                        <div className="font-bold text-slate-900">Civilian Fleet</div>
                        <div className="text-sm text-blue-700">Transport, colonization, and resource gathering vessels. Essential for empire expansion and logistics.</div>
@@ -333,7 +420,15 @@ export default function Shipyard() {
                <Card className="mb-6 bg-green-50 border-green-200" data-testid="card-troops-info">
                  <CardContent className="p-4">
                    <div className="flex items-center gap-4">
-                     <User className="w-8 h-8 text-green-400" />
+                     <img
+                       src={SHIP_ASSETS.SPECIAL.COLONIZER.path}
+                       alt="Personnel"
+                       className="w-10 h-10 object-contain"
+                       onError={(event) => {
+                         event.currentTarget.onerror = null;
+                         event.currentTarget.src = TEMP_THEME_IMAGE;
+                       }}
+                     />
                      <div>
                        <div className="font-bold text-slate-900">Military Personnel</div>
                        <div className="text-sm text-green-700">Ground forces for planetary invasion and defense. Infantry, medics, engineers, and special operations units.</div>
@@ -352,7 +447,15 @@ export default function Shipyard() {
                <Card className="mb-6 bg-orange-50 border-orange-200" data-testid="card-vehicles-info">
                  <CardContent className="p-4">
                    <div className="flex items-center gap-4">
-                     <Truck className="w-8 h-8 text-orange-400" />
+                     <img
+                       src={SHIP_ASSETS.CAPITALS.CORVETTE.path}
+                       alt="Vehicles"
+                       className="w-10 h-10 object-contain"
+                       onError={(event) => {
+                         event.currentTarget.onerror = null;
+                         event.currentTarget.src = TEMP_THEME_IMAGE;
+                       }}
+                     />
                      <div>
                        <div className="font-bold text-slate-900">Ground Vehicles</div>
                        <div className="text-sm text-orange-700">Armored vehicles, artillery, and mobile platforms for ground combat superiority.</div>
@@ -371,7 +474,15 @@ export default function Shipyard() {
                <Card className="mb-6 bg-purple-100 border-purple-300" data-testid="card-super-info">
                  <CardContent className="p-4">
                    <div className="flex items-center gap-4">
-                     <Zap className="w-8 h-8 text-purple-500" />
+                     <img
+                       src={SHIP_ASSETS.SPECIAL.CARRIER.path}
+                       alt="Super capital"
+                       className="w-10 h-10 object-contain"
+                       onError={(event) => {
+                         event.currentTarget.onerror = null;
+                         event.currentTarget.src = TEMP_THEME_IMAGE;
+                       }}
+                     />
                      <div>
                        <div className="font-bold text-purple-900">Super Capital Ships</div>
                        <div className="text-sm text-purple-700">Massive warships capable of devastating firepower. Requires Shipyard Level 8 to construct.</div>
@@ -391,7 +502,15 @@ export default function Shipyard() {
                <Card className="mb-6 bg-red-100 border-red-300" data-testid="card-titan-info">
                  <CardContent className="p-4">
                    <div className="flex items-center gap-4">
-                     <Hexagon className="w-10 h-10 text-red-600" />
+                     <img
+                       src={SHIP_ASSETS.SPECIAL.CARRIER.path}
+                       alt="Titans"
+                       className="w-12 h-12 object-contain"
+                       onError={(event) => {
+                         event.currentTarget.onerror = null;
+                         event.currentTarget.src = TEMP_THEME_IMAGE;
+                       }}
+                     />
                      <div>
                        <div className="font-orbitron font-bold text-red-900 text-lg">TITAN CLASS</div>
                        <div className="text-sm text-red-700">The ultimate expression of military might. These planet-killer class vessels require Shipyard Level 12 and massive resources to construct. Only one may exist per empire.</div>

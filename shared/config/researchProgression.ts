@@ -409,6 +409,213 @@ export const EXOTIC_TECHNOLOGIES: Research[] = [
   },
 ];
 
+const RESEARCH_EXPANSION_BRANCH_SPECS: Array<{
+  branch: ResearchBranch;
+  key: string;
+  label: string;
+  icon: string;
+  baseTier: number;
+  tierStep: number;
+  category: string;
+  focusStat: string;
+  rootPrerequisite: string;
+  unlocksBuildPrefix: string;
+  unlocksUnitPrefix: string;
+}> = [
+  {
+    branch: 'energy',
+    key: 'energy-grid',
+    label: 'Energy Grid',
+    icon: '⚡',
+    baseTier: 6,
+    tierStep: 2,
+    category: 'Expansion',
+    focusStat: 'efficiency',
+    rootPrerequisite: 'energy-tech-2',
+    unlocksBuildPrefix: 'fusion-array',
+    unlocksUnitPrefix: 'support-frigate',
+  },
+  {
+    branch: 'propulsion',
+    key: 'transit-vector',
+    label: 'Transit Vector',
+    icon: '🚀',
+    baseTier: 7,
+    tierStep: 2,
+    category: 'Expansion',
+    focusStat: 'speed',
+    rootPrerequisite: 'impulse-drive',
+    unlocksBuildPrefix: 'slipstream-buoy',
+    unlocksUnitPrefix: 'pathfinder-cruiser',
+  },
+  {
+    branch: 'weapons',
+    key: 'arsenal-doctrine',
+    label: 'Arsenal Doctrine',
+    icon: '🔫',
+    baseTier: 8,
+    tierStep: 2,
+    category: 'Expansion',
+    focusStat: 'attack',
+    rootPrerequisite: 'laser-tech',
+    unlocksBuildPrefix: 'siege-battery',
+    unlocksUnitPrefix: 'strike-destroyer',
+  },
+  {
+    branch: 'defense',
+    key: 'fortress-matrix',
+    label: 'Fortress Matrix',
+    icon: '🛡️',
+    baseTier: 8,
+    tierStep: 2,
+    category: 'Expansion',
+    focusStat: 'resistance',
+    rootPrerequisite: 'shield-tech',
+    unlocksBuildPrefix: 'adaptive-bastion',
+    unlocksUnitPrefix: 'guardian-platform',
+  },
+  {
+    branch: 'computers',
+    key: 'cognition-stack',
+    label: 'Cognition Stack',
+    icon: '💻',
+    baseTier: 9,
+    tierStep: 2,
+    category: 'Expansion',
+    focusStat: 'processing',
+    rootPrerequisite: 'computer-2',
+    unlocksBuildPrefix: 'neural-core',
+    unlocksUnitPrefix: 'command-corvette',
+  },
+  {
+    branch: 'economy',
+    key: 'market-synthesis',
+    label: 'Market Synthesis',
+    icon: '💱',
+    baseTier: 9,
+    tierStep: 2,
+    category: 'Expansion',
+    focusStat: 'output',
+    rootPrerequisite: 'energy-tech-2',
+    unlocksBuildPrefix: 'trade-exchange',
+    unlocksUnitPrefix: 'cargo-command',
+  },
+  {
+    branch: 'genetics',
+    key: 'genesis-lattice',
+    label: 'Genesis Lattice',
+    icon: '🧬',
+    baseTier: 10,
+    tierStep: 2,
+    category: 'Expansion',
+    focusStat: 'growth',
+    rootPrerequisite: 'ai-research',
+    unlocksBuildPrefix: 'cloning-spire',
+    unlocksUnitPrefix: 'bio-engineer',
+  },
+  {
+    branch: 'quantum',
+    key: 'entanglement-array',
+    label: 'Entanglement Array',
+    icon: '⚛️',
+    baseTier: 12,
+    tierStep: 2,
+    category: 'Expansion',
+    focusStat: 'stability',
+    rootPrerequisite: 'quantum-computing',
+    unlocksBuildPrefix: 'quantum-anchor',
+    unlocksUnitPrefix: 'phase-interceptor',
+  },
+  {
+    branch: 'megastructure',
+    key: 'mega-systems',
+    label: 'Mega Systems',
+    icon: '🏗️',
+    baseTier: 14,
+    tierStep: 2,
+    category: 'Expansion',
+    focusStat: 'capacity',
+    rootPrerequisite: 'mega-construct-2',
+    unlocksBuildPrefix: 'orbital-fabricator',
+    unlocksUnitPrefix: 'construction-armada',
+  },
+  {
+    branch: 'exotic',
+    key: 'reality-forge',
+    label: 'Reality Forge',
+    icon: '🌀',
+    baseTier: 16,
+    tierStep: 2,
+    category: 'Expansion',
+    focusStat: 'control',
+    rootPrerequisite: 'dark-energy',
+    unlocksBuildPrefix: 'paradox-vault',
+    unlocksUnitPrefix: 'rift-harbinger',
+  },
+];
+
+function generateResearchExpansionTechnologies(): Research[] {
+  return RESEARCH_EXPANSION_BRANCH_SPECS.flatMap((spec, branchIndex) => {
+    return Array.from({ length: 9 }, (_, index): Research => {
+      const mark = index + 1;
+      return {
+        id: `exp-${spec.key}-${mark}`,
+        name: `${spec.label} Protocol ${mark}`,
+        branch: spec.branch,
+        tier: Math.min(99, spec.baseTier + index * spec.tierStep),
+        maxLevel: 999,
+        description: `${spec.label} expansion stage ${mark} focused on ${spec.focusStat}`,
+        icon: `${spec.icon}${mark >= 6 ? spec.icon : ''}`,
+        category: branchIndex >= 7 ? 'Ascendant Expansion' : spec.category,
+      };
+    });
+  });
+}
+
+function generateResearchExpansionConfigs(): Record<string, ResearchConfig> {
+  const configs: Record<string, ResearchConfig> = {};
+
+  RESEARCH_EXPANSION_BRANCH_SPECS.forEach((spec, branchIndex) => {
+    for (let index = 0; index < 9; index++) {
+      const mark = index + 1;
+      const id = `exp-${spec.key}-${mark}`;
+      const previousId = mark > 1 ? `exp-${spec.key}-${mark - 1}` : spec.rootPrerequisite;
+      const nextId = mark < 9 ? `exp-${spec.key}-${mark + 1}` : null;
+      const scaling = 1 + branchIndex * 0.12 + mark * 0.08;
+
+      configs[id] = {
+        baseCost: {
+          metal: Math.floor(900 * scaling),
+          crystal: Math.floor(760 * scaling),
+          deuterium: Math.floor(620 * scaling),
+        },
+        baseTime: Math.floor(1500 * scaling),
+        baseStats: {
+          [spec.focusStat]: Math.floor(10 + mark * 2 + branchIndex),
+          efficiency: Math.floor(6 + mark + branchIndex * 0.5),
+        },
+        unlocksBuild: mark % 3 === 0 ? [`${spec.unlocksBuildPrefix}-${mark}`] : [],
+        unlocksUnit: mark % 4 === 0 ? [`${spec.unlocksUnitPrefix}-${mark}`] : [],
+        unlocksResearch: nextId ? [nextId] : [],
+        bonusPerLevel: {
+          [spec.focusStat]: 0.35 + mark * 0.03,
+          efficiency: 0.2 + branchIndex * 0.01,
+        },
+        bonusPerTier: {
+          [spec.focusStat]: 1 + mark * 0.08,
+          efficiency: 0.5 + branchIndex * 0.04,
+        },
+        prerequisites: [previousId],
+      };
+    }
+  });
+
+  return configs;
+}
+
+export const RESEARCH_EXPANSION_TECHNOLOGIES: Research[] = generateResearchExpansionTechnologies();
+export const RESEARCH_EXPANSION_CONFIGS: Record<string, ResearchConfig> = generateResearchExpansionConfigs();
+
 // All technologies
 export const ALL_TECHNOLOGIES: Research[] = [
   ...ENERGY_TECHNOLOGIES,
@@ -419,6 +626,7 @@ export const ALL_TECHNOLOGIES: Research[] = [
   ...MEGASTRUCTURE_TECHNOLOGIES,
   ...QUANTUM_TECHNOLOGIES,
   ...EXOTIC_TECHNOLOGIES,
+  ...RESEARCH_EXPANSION_TECHNOLOGIES,
 ];
 
 // Research configs
@@ -470,6 +678,8 @@ export const RESEARCH_CONFIGS: Record<string, ResearchConfig> = {
     bonusPerTier: { efficiency: 3, capacity: 20 },
     prerequisites: ['energy-tech-2', 'computer-2'],
   },
+
+  ...RESEARCH_EXPANSION_CONFIGS,
 };
 
 /**

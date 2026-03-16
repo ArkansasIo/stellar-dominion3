@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Rocket, Shield, Info, Loader2, Eye, EyeOff, Copy, Check } from "lucide-react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
+import { MENU_ASSETS } from "@shared/config";
 
 const GAME_VERSION = "1.0.0";
 const UNIVERSE_ID = "Nexus-Alpha";
+const TEMP_THEME_IMAGE = "/theme-temp.png";
 
 function getBuildChannel() {
   return import.meta.env.MODE === "production" ? "Production" : "Development";
@@ -125,8 +127,13 @@ export default function Auth() {
       )}
       <Card className="w-full max-w-md bg-white border border-slate-300 text-slate-900 relative z-10 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader className="text-center pb-2">
-          <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-             <Rocket className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
+             <img
+               src={MENU_ASSETS.NAVIGATION.EXPLORATION.path}
+               alt="stellar dominion"
+               className="w-10 h-10 object-contain"
+               onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+             />
           </div>
           <CardTitle className="text-4xl font-orbitron font-bold tracking-wider text-slate-900">STELLAR DOMINION</CardTitle>
           <CardDescription className="text-slate-700 font-rajdhani text-lg font-medium mt-2">⚡ Command your fleet. Conquer the stars.</CardDescription>

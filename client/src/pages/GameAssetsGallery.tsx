@@ -77,6 +77,7 @@ export default function GameAssetsGallery() {
   const [selectedCategory, setSelectedCategory] = useState<AssetCategory>("menu");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const tempThemeImage = "/theme-temp.png";
 
   const assets = getAssetsForCategory(selectedCategory);
 
@@ -88,23 +89,26 @@ export default function GameAssetsGallery() {
 
   const AssetCard = ({ asset }: { asset: AssetItem }) => {
     const bgColor = asset.bgColor || asset.color || "#34495E";
+    const previewScale = Math.min(160 / asset.size.width, 140 / asset.size.height, 1);
+    const previewWidth = Math.max(24, Math.round(asset.size.width * previewScale));
+    const previewHeight = Math.max(24, Math.round(asset.size.height * previewScale));
 
     return viewMode === "grid" ? (
       <div className="bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition border border-gray-700">
         {/* Asset Preview */}
         <div
-          className="w-full aspect-square flex items-center justify-center relative overflow-hidden"
+          className="w-full h-52 flex items-center justify-center relative overflow-hidden"
           style={{ backgroundColor: bgColor + "30" }}
         >
-          {/* Placeholder styled like a UI icon */}
           <div className="flex flex-col items-center justify-center w-full h-full gap-2">
-            <div
-              className="rounded"
-              style={{
-                width: `${Math.min(asset.size.width, 100)}px`,
-                height: `${Math.min(asset.size.height, 100)}px`,
-                backgroundColor: bgColor,
-                opacity: 0.7,
+            <img
+              src={asset.path}
+              alt={asset.name}
+              style={{ width: `${previewWidth}px`, height: `${previewHeight}px` }}
+              className="object-contain rounded border border-gray-700 bg-gray-900/30"
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = tempThemeImage;
               }}
             />
             <div className="text-xs text-gray-400">{asset.size.name}</div>
@@ -172,16 +176,20 @@ export default function GameAssetsGallery() {
       // List View
       <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-gray-500 transition flex items-start gap-4">
         <div
-          className="w-16 h-16 rounded flex-shrink-0 flex items-center justify-center"
+          className="w-20 h-20 rounded flex-shrink-0 flex items-center justify-center"
           style={{ backgroundColor: bgColor + "30" }}
         >
-          <div
-            className="rounded"
+          <img
+            src={asset.path}
+            alt={asset.name}
+            className="object-contain rounded border border-gray-700 bg-gray-900/30"
             style={{
-              width: `${Math.min(asset.size.width / 2, 32)}px`,
-              height: `${Math.min(asset.size.height / 2, 32)}px`,
-              backgroundColor: bgColor,
-              opacity: 0.7,
+              width: `${Math.max(20, Math.min(asset.size.width / 2, 64))}px`,
+              height: `${Math.max(20, Math.min(asset.size.height / 2, 64))}px`,
+            }}
+            onError={(event) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = tempThemeImage;
             }}
           />
         </div>
@@ -337,9 +345,7 @@ export default function GameAssetsGallery() {
             Copy asset IDs and paths for use in components and configurations
           </li>
           <li>All sizes follow OGame standard conventions</li>
-          <li>
-            Assets set as placeholders - integrate real images at these paths
-          </li>
+          <li>Missing images fall back to temporary theme image: /theme-temp.png</li>
           <li>Use `getAssetById()` utility from gameAssetsConfig</li>
           <li>Color values are hex codes suitable for CSS or Canvas</li>
         </ul>

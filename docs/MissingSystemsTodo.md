@@ -6,17 +6,17 @@ This checklist captures systems that are still stubbed, mocked, or UI-placeholde
 
 - [x] Persist combat history instead of mock response in `server/routes-combat.ts` (`/api/combat/battle-history` now reads from `battles`).
 - [x] Implement mining operations persistence currently marked stubbed in `server/storage.ts` (`mining_operations` table auto-created and used).
-- [ ] Replace remaining critical `alert(...)` gameplay actions with API-backed mutations for:
-  - `client/src/pages/Fleet.tsx` (templates + validation flow)
-  - `client/src/pages/Combat.tsx` (error handling UX)
-  - `client/src/pages/Colonies.tsx` (colonization action)
-  - `client/src/pages/Galaxy.tsx` (scan/message/attack/launch actions)
+- [x] Replace remaining critical gameplay placeholders with API-backed mutations for:
+  - [x] `client/src/pages/Fleet.tsx` (mission dispatch now posts to `/api/game/send-fleet` with coordinate/colonist validation)
+  - [x] `client/src/pages/Combat.tsx` (inline error state + stricter launch validation)
+  - [x] `client/src/pages/Colonies.tsx` (colonization now queues mission via `/api/game/send-fleet`)
+  - [x] `client/src/pages/Galaxy.tsx` (scan/message/attack/launch wired to API-backed actions)
 
 ## Priority P1 — Backend systems marked as stubs
 
-- [ ] Complete research achievement logic in `server/services/achievementService.ts`.
-- [ ] Complete custom lab creation and progression in `server/services/customLabService.ts`.
-- [ ] Complete multiplayer research bonus logic in `server/services/multiplayerBonusesService.ts`.
+- [x] Complete research achievement logic in `server/services/achievementService.ts`.
+- [x] Complete custom lab creation and progression in `server/services/customLabService.ts`.
+- [x] Complete multiplayer research bonus logic in `server/services/multiplayerBonusesService.ts`.
 - [ ] Replace all trade mocks in `server/services/researchTradingService.ts` with DB-backed flows:
   - listing, details, status updates, cancel/settle, history, rating/reputation,
   - disputes, blocking, bulk accept, eligibility checks, recommendations.
@@ -27,15 +27,15 @@ This checklist captures systems that are still stubbed, mocked, or UI-placeholde
 
 ## Priority P1 — Frontend features still placeholder-only
 
-- [ ] Implement alliance diplomacy/chat actions now wired to `alert(...)` in `client/src/pages/Alliance.tsx`.
-- [ ] Implement army equipment/deploy workflows in `client/src/pages/Army.tsx`.
-- [ ] Implement celestial browser detail/system navigation actions in `client/src/pages/CelestialBrowser.tsx`.
-- [ ] Implement exploration anomaly scan and gate capture/jump actions in `client/src/pages/Exploration.tsx`.
-- [ ] Implement friend request accept/reject backend actions in `client/src/pages/FriendsList.tsx`.
-- [ ] Implement market exchange action in `client/src/pages/Market.tsx`.
-- [ ] Implement raid boss challenge action in `client/src/pages/RaidBosses.tsx`.
-- [ ] Replace admin panel placeholder actions (`Export CSV`, `View user`) in `client/src/pages/Admin.tsx`.
-- [ ] Replace settings admin-tool placeholder actions (`Backup snapshot`, `Reset universe`, `Restart server`) in `client/src/pages/Settings.tsx`.
+- [x] Implement alliance diplomacy/chat actions now wired to API mutations in `client/src/pages/Alliance.tsx`.
+- [x] Implement army equipment/deploy workflows in `client/src/pages/Army.tsx`.
+- [x] Implement celestial browser detail/system navigation actions in `client/src/pages/CelestialBrowser.tsx`.
+- [x] Implement exploration anomaly scan and gate capture/jump actions in `client/src/pages/Exploration.tsx`.
+- [x] Implement friend request accept/reject backend actions in `client/src/pages/FriendsList.tsx`.
+- [x] Implement market exchange action in `client/src/pages/Market.tsx`.
+- [x] Implement raid boss challenge action in `client/src/pages/RaidBosses.tsx`.
+- [x] Replace admin panel placeholder actions (`Export CSV`, `View user`) in `client/src/pages/Admin.tsx`.
+- [x] Replace settings admin-tool placeholder actions (`Backup snapshot`, `Reset universe`, `Restart server`) in `client/src/pages/Settings.tsx`.
 
 ## Priority P2 — Content/system completeness
 
@@ -44,7 +44,7 @@ This checklist captures systems that are still stubbed, mocked, or UI-placeholde
   - Client now uses `useQuery` instead of local `getSystemData()`.
 - [x] Replace static troop roster seed (`MOCK_TROOPS`) with account/fleet-backed unit persistence (`client/src/pages/Army.tsx`).
 - [x] Implement planet defense systems panel (`client/src/pages/PlanetDetail.tsx`) — full upgrade UI with `defenseUpgradeMutation`.
-- [ ] Implement alliance real-time chat (`client/src/pages/Alliance.tsx`) — currently polls every 10 s but chat UI needs typing/send wiring.
+- [x] Implement alliance real-time chat (`client/src/pages/Alliance.tsx`) — polling + typing/send wiring present.
 
 ## P0 carried-forward fixes (session)
 

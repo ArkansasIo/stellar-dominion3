@@ -1,6 +1,7 @@
 import GameLayout from "@/components/layout/GameLayout";
 import { useGame } from "@/lib/gameContext";
 import type { CommanderStats } from "@/lib/commanderTypes";
+import { PLANET_ASSETS } from "@shared/config";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -15,6 +16,21 @@ import {
 } from "lucide-react";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
+
+function getPlanetImagePath(planetClass: string): string {
+  const c = planetClass.toUpperCase();
+  if (c === "M") return PLANET_ASSETS.TERRESTRIAL.EARTH_LIKE.path;
+  if (c === "H") return PLANET_ASSETS.TERRESTRIAL.DESERT.path;
+  if (c === "L") return PLANET_ASSETS.TERRESTRIAL.JUNGLE.path;
+  if (c === "K") return PLANET_ASSETS.TERRESTRIAL.ICE.path;
+  if (c === "Y") return PLANET_ASSETS.TERRESTRIAL.VOLCANIC.path;
+  if (c === "D") return PLANET_ASSETS.TERRESTRIAL.DESERT.path;
+  if (c === "J") return PLANET_ASSETS.GAS_GIANTS.JUPITER_CLASS.path;
+  if (c === "T") return PLANET_ASSETS.GAS_GIANTS.NEPTUNE_CLASS.path;
+  return PLANET_ASSETS.TERRESTRIAL.EARTH_LIKE.path;
+}
 
 function fmt(n: number): string {
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`;
@@ -172,6 +188,27 @@ export default function EmpireView() {
     .sort(([, a], [, b]) => b - a)
     .slice(0, 6);
 
+  const totalUnits = Object.values(units).reduce((sum, value) => sum + value, 0);
+  const orbitalStructureCount = Object.values(orbitalBuildings).reduce((sum, value) => sum + value, 0);
+  const missionByType = activeMissions.reduce<Record<string, number>>((acc, mission) => {
+    acc[mission.type] = (acc[mission.type] || 0) + 1;
+    return acc;
+  }, {});
+
+  const empireStatus = {
+    economy: Math.max(0, Math.min(100, Math.round(45 + buildings.metalMine * 2 + buildings.crystalMine * 2 + (energyProd >= 0 ? 12 : -10)))),
+    military: Math.max(0, Math.min(100, Math.round(20 + totalFleetPower / 300 + totalUnits / 25))),
+    science: Math.max(0, Math.min(100, Math.round(25 + totalResearchLevels * 2.8))),
+    expansion: Math.max(0, Math.min(100, Math.round(30 + orbitalStructureCount * 4 + (kardashevLevel * 2)))),
+  };
+
+  const operationsBacklog = [
+    { label: "Facilities upgrades", count: Object.values(buildings).filter((level) => level < 10).length, href: "/facilities" },
+    { label: "Research targets", count: Object.values(research).filter((level) => level < 5).length, href: "/research" },
+    { label: "Orbital projects", count: Object.values(orbitalBuildings).filter((level) => level > 0).length, href: "/stations" },
+    { label: "Mission operations", count: activeMissions.length, href: "/fleet" },
+  ];
+
   const unitLabels: Record<string, string> = {
     lightFighter: "Light Fighter", heavyFighter: "Heavy Fighter",
     cruiser: "Cruiser", battleship: "Battleship",
@@ -255,8 +292,13 @@ export default function EmpireView() {
               </CardHeader>
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-green-500 flex items-center justify-center shadow-inner">
-                    <Globe className="w-8 h-8 text-white" />
+                  <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-primary/30 shadow-inner shrink-0">
+                    <img
+                      src={getPlanetImagePath(planetInfo.class)}
+                      alt={planetInfo.type}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+                    />
                   </div>
                   <div>
                     <div className="font-orbitron font-bold text-lg text-slate-900">{planetName}</div>
@@ -677,6 +719,75 @@ export default function EmpireView() {
             </div>
           </CardContent>
         </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="border-slate-200 shadow-sm" data-testid="card-empire-status-breakdown">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <BarChart2 className="w-4 h-4 text-slate-500" /> Empire Status Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1"><span>Economy</span><span className="font-mono">{empireStatus.economy}%</span></div>
+                <Progress value={empireStatus.economy} className="h-2" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1"><span>Military</span><span className="font-mono">{empireStatus.military}%</span></div>
+                <Progress value={empireStatus.military} className="h-2" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1"><span>Science</span><span className="font-mono">{empireStatus.science}%</span></div>
+                <Progress value={empireStatus.science} className="h-2" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1"><span>Expansion</span><span className="font-mono">{empireStatus.expansion}%</span></div>
+                <Progress value={empireStatus.expansion} className="h-2" />
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
+                {operationsBacklog.map((entry) => (
+                  <Link key={entry.label} href={entry.href}>
+                    <div className="p-2 rounded border border-slate-200 bg-slate-50 hover:border-primary/40 hover:bg-primary/5 transition-colors">
+                      <div className="text-slate-500">{entry.label}</div>
+                      <div className="font-bold text-slate-900">{entry.count}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200 shadow-sm" data-testid="card-system-details">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-slate-500" /> Components, Functions & Logic
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-xs">
+              <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                <div className="font-semibold text-slate-800">Planet Intelligence</div>
+                <div className="text-slate-600">`getPlanetDetails(seed)` derives planet class/type and environment from coordinates.</div>
+              </div>
+              <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                <div className="font-semibold text-slate-800">Civilization Progress</div>
+                <div className="text-slate-600">`getKardashevLevel(researchTotal)` and `calculateProgressToNext(...)` drive empire tier and bonuses.</div>
+              </div>
+              <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                <div className="font-semibold text-slate-800">Score & Performance</div>
+                <div className="text-slate-600">Empire score combines fleet power, research progression, and infrastructure depth.</div>
+              </div>
+              <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                <div className="font-semibold text-slate-800">Operational Features</div>
+                <div className="text-slate-600">Fleet ops: {activeMissions.length} active · Unread messages: {unreadMessages} · Mission profile: {Object.keys(missionByType).length ? Object.entries(missionByType).map(([type, count]) => `${type}:${count}`).join(", ") : "none"}.</div>
+              </div>
+              <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                <div className="font-semibold text-slate-800">Subpage Coverage</div>
+                <div className="text-slate-600">Empire View links directly to resources, facilities, research, shipyard, fleet, colonies, planet overview, commander, government, alliance, progression, and megastructures.</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
       </div>
     </GameLayout>

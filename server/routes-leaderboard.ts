@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "./db";
-import { playerStates } from "../shared/schema";
+import { playerStates, users } from "../shared/schema";
 
 // Middleware to check authentication
 function isAuthenticated(req: Request, res: Response, next: Function) {
@@ -35,6 +35,77 @@ export const LEADERBOARD_CONFIG = {
     novice: 0,
   },
 };
+
+const RANK_TITLES: Record<string, string> = {
+  legendary: "Galactic Legend",
+  elite: "Supreme Admiral",
+  advanced: "Star Commander",
+  intermediate: "Sector Captain",
+  novice: "Cadet",
+};
+
+type LeaderboardScoreType = (typeof LEADERBOARD_CONFIG.LEADERBOARD_TYPES)[keyof typeof LEADERBOARD_CONFIG.LEADERBOARD_TYPES];
+
+function normalizeLimit(rawLimit: unknown): number {
+  const parsed = Number.parseInt(String(rawLimit ?? "50"), 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return 50;
+  }
+  return Math.min(parsed, LEADERBOARD_CONFIG.MAX_ENTRIES);
+}
+
+function calculateScoreByType(type: LeaderboardScoreType, player: any): number {
+  switch (type) {
+    case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.EMPIRE_VALUE:
+      return calculateEmpireValue(player);
+    case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.FLEET_POWER:
+      return calculateFleetPower(player, player.research);
+    case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.RESEARCH_PROGRESS:
+      return calculateResearchProgress(player.research);
+    case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.RESOURCE_PRODUCTION: {
+      const resources = player.resources as any || {};
+      return (resources.metal || 0) + (resources.crystal || 0) + (resources.deuterium || 0);
+    }
+    case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.COMBAT_VICTORIES: {
+      const combatStats = player.combatStats as any || {};
+      return combatStats.victories || 0;
+    }
+    case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.EXPLORATION_DISCOVERIES: {
+      const travelState = player.travelState as any || {};
+      return (travelState.discoveredPlanets || []).length;
+    }
+    default:
+      return 0;
+  }
+}
+
+async function buildIdentityMap(players: any[]) {
+  const userIds = Array.from(new Set(players.map((p: any) => p.userId).filter(Boolean)));
+
+  if (!userIds.length) {
+    return new Map<string, { displayName: string; title: string }>();
+  }
+
+  const userRows = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      firstName: users.firstName,
+    })
+    .from(users)
+    .where(inArray(users.id, userIds));
+
+  const map = new Map<string, { displayName: string; title: string }>();
+  for (const player of players) {
+    const user = userRows.find((u) => u.id === player.userId);
+    const commander = (player.commander as any) || {};
+    const displayName = user?.firstName || user?.username || player.userId?.substring(0, 10) || "Unknown";
+    const title = commander.title || "Commander";
+    map.set(player.userId, { displayName, title });
+  }
+
+  return map;
+}
 
 /**
  * Calculate player's empire value (total wealth)
@@ -154,12 +225,71 @@ export function calculateResearchProgress(researchState: any = {}): number {
 }
 
 export function registerLeaderboardRoutes(app: Express) {
+  // Get player rank in all categories
+  app.get("/api/leaderboard/ranks/all", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const playerState = await db.query.playerStates.findFirst({
+        where: eq(playerStates.userId, userId),
+      });
+
+      if (!playerState) {
+        return res.status(404).json({ error: "Player state not found" });
+      }
+
+      const allPlayers = await db.query.playerStates.findMany();
+      const ranks: any = {};
+
+      for (const [, typeValue] of Object.entries(LEADERBOARD_CONFIG.LEADERBOARD_TYPES)) {
+        const scores = allPlayers.map((player: any) => ({
+          userId: player.userId,
+          score: calculateScoreByType(typeValue as LeaderboardScoreType, player),
+        }));
+
+        const sorted = scores.sort((a, b) => b.score - a.score);
+        const playerRank = sorted.findIndex((s: any) => s.userId === userId) + 1;
+        const playerScore = scores.find((s: any) => s.userId === userId)?.score || 0;
+        const rankPercent = sorted.length > 0 ? (playerRank / sorted.length) : 1;
+
+        let rank = "novice";
+        for (const [rankName, threshold] of Object.entries(LEADERBOARD_CONFIG.RANK_THRESHOLDS)) {
+          if (rankPercent >= threshold) {
+            rank = rankName;
+            break;
+          }
+        }
+
+        ranks[typeValue] = {
+          rank: playerRank,
+          score: playerScore,
+          outOf: sorted.length,
+          percentile: Math.round((playerRank / Math.max(sorted.length, 1)) * 100),
+          rankClass: rank,
+          rankTitle: RANK_TITLES[rank] || "Commander",
+        };
+      }
+
+      return res.json({
+        userId,
+        ranks,
+        overallRank: Object.values(ranks).reduce((sum: number, r: any) => sum + r.rank, 0) /
+          Math.max(Object.keys(ranks).length, 1),
+      });
+    } catch (error) {
+      console.error("Error getting player ranks:", error);
+      return res.status(500).json({ error: "Failed to get player ranks" });
+    }
+  });
   
   // Get specific leaderboard
   app.get("/api/leaderboard/:type", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { type } = req.params;
-      const { limit = 50 } = req.query;
+      const limit = normalizeLimit(req.query.limit);
 
       if (!Object.values(LEADERBOARD_CONFIG.LEADERBOARD_TYPES).includes(type)) {
         return res.status(400).json({ 
@@ -170,36 +300,13 @@ export function registerLeaderboardRoutes(app: Express) {
 
       // Fetch all players
       const allPlayers = await db.query.playerStates.findMany();
+      const identityMap = await buildIdentityMap(allPlayers);
 
       // Calculate scores based on leaderboard type
       const rankings = allPlayers
         .map((player: any) => {
-          let score = 0;
-          let displayName = player.userId?.substring(0, 10) || "Unknown";
-
-          switch (type) {
-            case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.EMPIRE_VALUE:
-              score = calculateEmpireValue(player);
-              break;
-            case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.FLEET_POWER:
-              score = calculateFleetPower(player, player.research);
-              break;
-            case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.RESEARCH_PROGRESS:
-              score = calculateResearchProgress(player.research);
-              break;
-            case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.RESOURCE_PRODUCTION:
-              const resources = player.resources as any || {};
-              score = (resources.metal || 0) + (resources.crystal || 0) + (resources.deuterium || 0);
-              break;
-            case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.COMBAT_VICTORIES:
-              const combatStats = player.combatStats as any || {};
-              score = combatStats.victories || 0;
-              break;
-            case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.EXPLORATION_DISCOVERIES:
-              const travelState = player.travelState as any || {};
-              score = (travelState.discoveredPlanets || []).length;
-              break;
-          }
+          const score = calculateScoreByType(type as LeaderboardScoreType, player);
+          const identity = identityMap.get(player.userId) || { displayName: "Unknown", title: "Commander" };
 
           // Determine rank badge
           let rank = "novice";
@@ -217,14 +324,16 @@ export function registerLeaderboardRoutes(app: Express) {
 
           return {
             userId: player.userId,
-            displayName,
+            displayName: identity.displayName,
+            commanderTitle: identity.title,
             score,
             rank,
+            rankTitle: RANK_TITLES[rank] || "Commander",
             createdAt: player.createdAt,
           };
         })
         .sort((a: any, b: any) => b.score - a.score)
-        .slice(0, parseInt(limit as string) || 50);
+        .slice(0, limit);
 
       // Add ranking position
       const rankedResults = rankings.map((item: any, index: number) => ({
@@ -244,122 +353,23 @@ export function registerLeaderboardRoutes(app: Express) {
     }
   });
 
-  // Get player rank in all categories
-  app.get("/api/leaderboard/ranks/all", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = (req as any).session?.userId;
-      if (!userId) {
-        return res.status(401).json({ error: "Not authenticated" });
-      }
-
-      const playerState = await db.query.playerStates.findFirst({
-        where: eq(playerStates.userId, userId),
-      });
-
-      if (!playerState) {
-        return res.status(404).json({ error: "Player state not found" });
-      }
-
-      // Fetch all players for rankings
-      const allPlayers = await db.query.playerStates.findMany();
-
-      const ranks: any = {};
-
-      // Calculate rank for each leaderboard type
-      for (const [typeKey, typeValue] of Object.entries(LEADERBOARD_CONFIG.LEADERBOARD_TYPES)) {
-        const scores = allPlayers.map((player: any) => {
-          let score = 0;
-
-          switch (typeValue) {
-            case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.EMPIRE_VALUE:
-              score = calculateEmpireValue(player);
-              break;
-            case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.FLEET_POWER:
-              score = calculateFleetPower(player, player.research);
-              break;
-            case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.RESEARCH_PROGRESS:
-              score = calculateResearchProgress(player.research);
-              break;
-            case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.RESOURCE_PRODUCTION:
-              const resources = player.resources as any || {};
-              score = (resources.metal || 0) + (resources.crystal || 0) + (resources.deuterium || 0);
-              break;
-            case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.COMBAT_VICTORIES:
-              const combatStats = player.combatStats as any || {};
-              score = combatStats.victories || 0;
-              break;
-            case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.EXPLORATION_DISCOVERIES:
-              const travelState = player.travelState as any || {};
-              score = (travelState.discoveredPlanets || []).length;
-              break;
-          }
-
-          return { userId: player.userId, score };
-        });
-
-        // Sort and find player's rank
-        const sorted = scores.sort((a, b) => b.score - a.score);
-        const playerRank = sorted.findIndex((s: any) => s.userId === userId) + 1;
-        const playerScore = scores.find((s: any) => s.userId === userId)?.score || 0;
-
-        ranks[typeValue] = {
-          rank: playerRank,
-          score: playerScore,
-          outOf: sorted.length,
-          percentile: Math.round((playerRank / sorted.length) * 100),
-        };
-      }
-
-      res.json({
-        userId,
-        ranks,
-        overallRank: Object.values(ranks).reduce((sum: number, r: any) => sum + r.rank, 0) /
-          Object.keys(ranks).length,
-      });
-    } catch (error) {
-      console.error("Error getting player ranks:", error);
-      res.status(500).json({ error: "Failed to get player ranks" });
-    }
-  });
-
   // Get all leaderboards summary
   app.get("/api/leaderboard/all", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const leaderboards: any = {};
+      const allPlayers = await db.query.playerStates.findMany();
+      const identityMap = await buildIdentityMap(allPlayers);
 
       for (const [typeKey, typeValue] of Object.entries(LEADERBOARD_CONFIG.LEADERBOARD_TYPES)) {
-        const allPlayers = await db.query.playerStates.findMany();
-
         const rankings = allPlayers
           .map((player: any) => {
-            let score = 0;
-
-            switch (typeValue) {
-              case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.EMPIRE_VALUE:
-                score = calculateEmpireValue(player);
-                break;
-              case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.FLEET_POWER:
-                score = calculateFleetPower(player, player.research);
-                break;
-              case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.RESEARCH_PROGRESS:
-                score = calculateResearchProgress(player.research);
-                break;
-              case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.RESOURCE_PRODUCTION:
-                const resources = player.resources as any || {};
-                score = (resources.metal || 0) + (resources.crystal || 0) + (resources.deuterium || 0);
-                break;
-              case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.COMBAT_VICTORIES:
-                const combatStats = player.combatStats as any || {};
-                score = combatStats.victories || 0;
-                break;
-              case LEADERBOARD_CONFIG.LEADERBOARD_TYPES.EXPLORATION_DISCOVERIES:
-                const travelState = player.travelState as any || {};
-                score = (travelState.discoveredPlanets || []).length;
-                break;
-            }
+            const score = calculateScoreByType(typeValue as LeaderboardScoreType, player);
+            const identity = identityMap.get(player.userId) || { displayName: "Unknown", title: "Commander" };
 
             return {
               userId: player.userId,
+              displayName: identity.displayName,
+              commanderTitle: identity.title,
               score,
             };
           })
@@ -372,13 +382,13 @@ export function registerLeaderboardRoutes(app: Express) {
         }));
       }
 
-      res.json({
+      return res.json({
         leaderboards,
         categories: Object.keys(LEADERBOARD_CONFIG.LEADERBOARD_TYPES).length,
       });
     } catch (error) {
       console.error("Error getting all leaderboards:", error);
-      res.status(500).json({ error: "Failed to get leaderboards" });
+      return res.status(500).json({ error: "Failed to get leaderboards" });
     }
   });
 }

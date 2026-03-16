@@ -1,9 +1,12 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import GameLayout from "@/components/layout/GameLayout";
+import { TECH_BRANCH_ASSETS } from "@shared/config";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Compass, Database, FileText, Globe, Layers } from "lucide-react";
+import { FileText, Globe, Layers } from "lucide-react";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
 
 type PlanetTypeRecord = {
   id: string;
@@ -126,8 +129,8 @@ export default function EmpirePlanetViewer() {
                   <div className="text-xs text-muted-foreground uppercase tracking-wider">Known Types</div>
                   <div className="text-2xl font-orbitron font-bold text-slate-900">{planetsQuery.data?.count ?? 0}</div>
                 </div>
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Layers className="w-6 h-6 text-primary" />
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.COMPUTING.path} alt="known types" className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
               </div>
             </CardContent>
@@ -140,8 +143,8 @@ export default function EmpirePlanetViewer() {
                   <div className="text-xs text-blue-600 uppercase tracking-wider">Known Planets</div>
                   <div className="text-2xl font-orbitron font-bold text-blue-900">{travelStateQuery.data?.knownPlanets?.length ?? 0}</div>
                 </div>
-                <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <Globe className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.SENSORS.path} alt="known planets" className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
               </div>
             </CardContent>
@@ -154,8 +157,8 @@ export default function EmpirePlanetViewer() {
                   <div className="text-xs text-purple-600 uppercase tracking-wider">Travel Logs</div>
                   <div className="text-2xl font-orbitron font-bold text-purple-900">{travelStateQuery.data?.travelLog?.length ?? 0}</div>
                 </div>
-                <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
-                  <Compass className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.PROPULSION.path} alt="travel logs" className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
               </div>
             </CardContent>
@@ -168,8 +171,8 @@ export default function EmpirePlanetViewer() {
                   <div className="text-xs text-emerald-700 uppercase tracking-wider">Avg Habitability</div>
                   <div className="text-2xl font-orbitron font-bold text-emerald-900">{avgHabitability}</div>
                 </div>
-                <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <Database className="w-6 h-6 text-emerald-600" />
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={TECH_BRANCH_ASSETS.RESOURCES.path} alt="habitability" className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
               </div>
             </CardContent>

@@ -7,6 +7,16 @@ import { Separator } from "@/components/ui/separator";
 import { Box, Gem, Database, Zap, ArrowUpCircle, Hammer, Clock, TrendingUp, Warehouse, Info, ChevronRight, BarChart3 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { MENU_ASSETS } from "@shared/config";
+
+const TEMP_THEME_IMAGE = "/theme-temp.png";
+
+const RESOURCE_IMAGE_MAP: Record<string, string> = {
+  metalMine:             MENU_ASSETS.RESOURCES.METAL.path,
+  crystalMine:           MENU_ASSETS.RESOURCES.CRYSTAL.path,
+  deuteriumSynthesizer:  MENU_ASSETS.RESOURCES.DEUTERIUM.path,
+  solarPlant:            MENU_ASSETS.BUILDINGS.POWER_PLANT.path,
+};
 
 const BuildingCard = ({ 
   id, 
@@ -21,6 +31,7 @@ const BuildingCard = ({
   energyCost,
   iconColor
 }: any) => {
+  const imagePath = RESOURCE_IMAGE_MAP[id];
   const metalCost = Math.floor(100 * Math.pow(1.5, level));
   const crystalCost = Math.floor(50 * Math.pow(1.5, level));
   const buildTime = (level + 1) * 10;
@@ -30,12 +41,33 @@ const BuildingCard = ({
   return (
     <Card className="bg-white border-slate-200 hover:border-primary/50 transition-all group overflow-hidden shadow-sm" data-testid={`card-building-${id}`}>
        <div className="h-36 bg-gradient-to-br from-slate-50 to-slate-100 relative group-hover:from-slate-100 group-hover:to-slate-200 transition-colors duration-500 border-b border-slate-200">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Icon className={cn("w-20 h-20 opacity-20", iconColor || "text-slate-400")} />
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Icon className={cn("w-16 h-16 transition-transform group-hover:scale-110", iconColor || "text-slate-500")} />
-          </div>
+          {imagePath ? (
+            <>
+              <img
+                src={imagePath}
+                alt={name}
+                className="absolute inset-0 w-full h-full object-contain opacity-20 pointer-events-none"
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <img
+                  src={imagePath}
+                  alt={name}
+                  className="w-16 h-16 object-contain drop-shadow transition-transform group-hover:scale-110"
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = TEMP_THEME_IMAGE; }}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Icon className={cn("w-20 h-20 opacity-20", iconColor || "text-slate-400")} />
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Icon className={cn("w-16 h-16 transition-transform group-hover:scale-110", iconColor || "text-slate-500")} />
+              </div>
+            </>
+          )}
           <div className="absolute bottom-2 right-2 bg-white px-3 py-1.5 rounded text-sm font-orbitron text-primary border border-slate-200 shadow-sm">
             Level {level}
           </div>
@@ -149,8 +181,8 @@ export default function Resources() {
           <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200" data-testid="card-stats-metal">
             <CardContent className="p-4">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-slate-500/10 flex items-center justify-center">
-                  <Box className="w-5 h-5 text-slate-600" />
+                <div className="w-10 h-10 rounded-full bg-slate-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={MENU_ASSETS.RESOURCES.METAL.path} alt="metal" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-muted-foreground uppercase">Metal</div>
@@ -174,8 +206,8 @@ export default function Resources() {
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200" data-testid="card-stats-crystal">
             <CardContent className="p-4">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <Gem className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={MENU_ASSETS.RESOURCES.CRYSTAL.path} alt="crystal" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-blue-600 uppercase">Crystal</div>
@@ -199,8 +231,8 @@ export default function Resources() {
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200" data-testid="card-stats-deuterium">
             <CardContent className="p-4">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <Database className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center overflow-hidden">
+                  <img src={MENU_ASSETS.RESOURCES.DEUTERIUM.path} alt="deuterium" className="w-7 h-7 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = TEMP_THEME_IMAGE; }} />
                 </div>
                 <div>
                   <div className="text-xs text-green-600 uppercase">Deuterium</div>
