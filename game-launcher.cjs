@@ -3,7 +3,7 @@
 // Universe Empire Dominion - Full Game Launcher
 // Manages both server and client processes
 
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 const path = require('path');
 const http = require('http');
 const fs = require('fs');
@@ -12,6 +12,7 @@ const fs = require('fs');
 const SERVER_PORT = 3000;
 const SERVER_URL = `http://localhost:${SERVER_PORT}`;
 const CHECK_INTERVAL = 5000; // 5 seconds
+const DB_CHECK_ENABLED = false; // Disable strict DB checking for now
 
 // Colors
 const colors = {
@@ -32,6 +33,8 @@ let serverProcess = null;
 let serverRunning = false;
 let clientOpened = false;
 let statusCheckInterval = null;
+let hasDbError = false;
+let hasBuildError = false;
 
 // Utility functions
 function log(message, color = 'reset') {
@@ -73,7 +76,7 @@ function logInfo(message) {
 function checkServer() {
   return new Promise((resolve) => {
     const req = http.get(SERVER_URL, (res) => {
-      resolve(res.statusCode === 200 || res.statusCode === 302);
+      resolve(res.statusCode === 200 || res.statusCode === 302 || res.statusCode === 404);
     });
     
     req.on('error', () => {
@@ -83,6 +86,19 @@ function checkServer() {
     req.setTimeout(2000, () => {
       req.destroy();
       resolve(false);
+    });
+  });
+}
+
+// Check if PostgreSQL is running
+function checkPostgreSQL() {
+  return new Promise((resolve) => {
+    exec('pg_isready', (error, stdout) => {
+      if (error) {
+        resolve(false);
+      } else {
+        resolve(stdout.includes('accepting connections'));
+      }
     });
   });
 }
@@ -110,13 +126,33 @@ function startServer() {
     serverProcess.stdout.on('data', (data) => {
       const output = data.toString().trim();
       if (output) {
-        log(`[SERVER] ${output}`, 'cyan');
+        // Check for specific errors
+        if (output.includes('database') && output.includes('does not exist')) {
+          hasDbError = true;
+        }
+        if (output.includes('Could not find') && output.includes('build directory')) {
+          hasBuildError = true;
+        }
+        
+        // Filter out verbose logs
+        if (!output.includes('ExperimentalWarning') && 
+            !output.includes('injecting env') &&
+            !output.includes('tip:')) {
+          log(`[SERVER] ${output}`, 'cyan');
+        }
       }
     });
     
     serverProcess.stderr.on('data', (data) => {
       const output = data.toString().trim();
       if (output && !output.includes('ExperimentalWarning')) {
+        // Check for errors
+        if (output.includes('database') && output.includes('does not exist')) {
+          hasDbError = true;
+        }
+        if (output.includes('Could not find') && output.includes('build directory')) {
+          hasBuildError = true;
+        }
         log(`[SERVER] ${output}`, 'yellow');
       }
     });
@@ -129,6 +165,28 @@ function startServer() {
     serverProcess.on('exit', (code) => {
       if (code !== 0 && code !== null) {
         logError(`Server exited with code ${code}`);
+        
+        // Provide helpful error messages
+        if (hasDbError) {
+          console.log('');
+          logWarning('Database Error Detected!');
+          logInfo('The database "universe_empire" does not exist.');
+          logInfo('To fix this:');
+          logInfo('  1. Make sure PostgreSQL is installed and running');
+          logInfo('  2. Run: createdb universe_empire');
+          logInfo('  3. Or run: npm run db:setup');
+          console.log('');
+        }
+        
+        if (hasBuildError) {
+          console.log('');
+          logWarning('Build Directory Error Detected!');
+          logInfo('The client build files are missing.');
+          logInfo('To fix this:');
+          logInfo('  1. Run: npm run build');
+          logInfo('  2. Or run: npm run build:complete');
+          console.log('');
+        }
       } else {
         logInfo('Server process stopped');
       }
@@ -148,6 +206,15 @@ function startServer() {
         clearInterval(checkInterval);
         serverRunning = true;
         logSuccess(`Server is running on ${SERVER_URL}`);
+        
+        // Show warnings if there were errors but server still started
+        if (hasDbError) {
+          console.log('');
+          logWarning('Server started with database errors');
+          logInfo('Some features may not work correctly');
+          console.log('');
+        }
+        
         resolve();
       } else if (attempts >= maxAttempts) {
         clearInterval(checkInterval);
@@ -175,7 +242,6 @@ function openBrowser(url) {
     command = `xdg-open ${url}`;
   }
   
-  const { exec } = require('child_process');
   exec(command, (error) => {
     if (error) {
       logError(`Failed to open browser: ${error.message}`);
@@ -273,6 +339,17 @@ async function main() {
       logSuccess('Configuration file found');
     }
     
+    // Check PostgreSQL (optional)
+    if (DB_CHECK_ENABLED) {
+      const pgRunning = await checkPostgreSQL();
+      if (!pgRunning) {
+        logWarning('PostgreSQL may not be running');
+        logInfo('Database features may not work');
+      } else {
+        logSuccess('PostgreSQL is running');
+      }
+    }
+    
     // Start server
     await startServer();
     
@@ -297,5 +374,7 @@ async function main() {
 
 // Run
 main();
+
+// Made with ❤️ by Bob
 
 // Made with Bob
