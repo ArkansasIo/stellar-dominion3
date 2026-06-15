@@ -33,7 +33,12 @@ echo To stop the game:
 echo   1. Close your browser
 echo   2. Close the server window
 echo.
-echo Press any key to close this launcher...
-pause >nul
+echo.
+echo ========================================================
+echo   Launcher will stay open to monitor the game
+echo   Press Ctrl+C to stop and close everything
+echo ========================================================
+echo.
+pause
 
 @REM Made with Bob
