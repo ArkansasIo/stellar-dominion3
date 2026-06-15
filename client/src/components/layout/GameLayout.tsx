@@ -64,6 +64,7 @@ import {
   Menu,
   MonitorSmartphone,
   Hammer,
+  Terminal,
   X,
 } from "lucide-react";
 
@@ -499,7 +500,8 @@ const systemItems: NavItem[] = [
 
 const adminItems: NavItem[] = [
   { href: "/admin", icon: ShieldAlert, label: "Control Panel", description: "Use administrative controls for game and player management." },
-  { href: "/server-console", icon: Database, label: "Server Console", description: "Review live server console tools and operational controls." },
+  { href: "/admin/database", icon: Database, label: "Database Admin", description: "Browse tables, execute SQL, and manage the PostgreSQL database.", activePrefixes: ["/admin/database"] },
+  { href: "/server-console", icon: Terminal, label: "Server Console", description: "Review live server console tools and operational controls." },
 ];
 
 const getCommandTiles = (context: ActivePageContext | null): CommandTile[] => {

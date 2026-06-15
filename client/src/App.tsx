@@ -87,6 +87,7 @@ const PlanetaryOccupation = lazy(() => import("@/pages/PlanetaryOccupation"));
 const OgameCompendium = lazy(() => import("@/pages/OgameCompendium"));
 const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
 const ThreeDViewerPortal = lazy(() => import("@/pages/ThreeDViewerPortal"));
+const DatabaseAdmin = lazy(() => import("@/pages/DatabaseAdmin"));
 
 function LoadingSplash() {
   return (
@@ -263,6 +264,7 @@ function RouterContent() {
       <Route path="/assets-gallery" component={GameAssetsGallery} />
       <Route path="/settings" component={Settings} />
       <Route path="/admin" component={Admin} />
+      <Route path="/admin/database" component={DatabaseAdmin} />
       <Route path="/server-console" component={ServerConsole} />
       <Route component={NotFound} />
     </Switch>
