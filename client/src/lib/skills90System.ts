@@ -1101,3 +1101,15 @@ export const SKILLS_90: Skill[] = [
   },
   {
     skillId: 'wholesale',
+    name: 'Wholesale',
+    description: 'Wholesale operations. +2 market orders per level.',
+    category: 'social',
+    rank: 3,
+    maxLevel: 5,
+    primaryAttribute: 'charisma',
+    secondaryAttribute: 'memory',
+    prerequisites: [{ skillId: 'retail', level: 2 }],
+    effects: [{ type: 'market_orders', value: 2, perLevel: true }],
+    unlocks: []
+  }
+];

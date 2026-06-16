@@ -113,7 +113,7 @@ export class UpdateManager {
       return {
         available: true,
         version: serverVersion,
-        manifest
+        manifest: manifest ?? undefined
       };
     }
 
@@ -331,7 +331,7 @@ export class UpdateManager {
         const platform = req.query.platform as string || 'unknown';
         
         if (req.user) {
-          this.trackClientVersion(req.user.id, clientVersion, platform);
+          this.trackClientVersion((req.user as any).id, clientVersion, platform);
         }
 
         const update = await this.checkForUpdates(clientVersion);
@@ -383,7 +383,7 @@ export class UpdateManager {
     app.post('/api/updates/create-patch', async (req: Request, res: Response) => {
       try {
         // Check admin permission
-        if (!req.user || !req.user.isAdmin) {
+        if (!req.user || !(req.user as any).isAdmin) {
           return res.status(403).json({ error: 'Admin access required' });
         }
 
@@ -412,7 +412,7 @@ export class UpdateManager {
     // Get client statistics (admin only)
     app.get('/api/updates/stats', (req: Request, res: Response) => {
       try {
-        if (!req.user || !req.user.isAdmin) {
+        if (!req.user || !(req.user as any).isAdmin) {
           return res.status(403).json({ error: 'Admin access required' });
         }
 
