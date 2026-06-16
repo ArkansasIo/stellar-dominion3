@@ -5,7 +5,7 @@
 # Stellar Dominion - Complete UML Architecture & Design Document
 
 > **Stellar Dominion** — A Next-Generation 4X Space Strategy MMORPG (TypeScript/React/PostgreSQL)
-> **Xenobe Rage / Blacknova Traders** — The Classic PHP Foundation (2001-2013)
+> **Universe Empires** — The Classic PHP Foundation
 > Repository: https://github.com/ArkansasIo/stellar-dominion3.git
 > Xenobe Rage Source: https://github.com/ArkansasIo/xenoberage.git
 

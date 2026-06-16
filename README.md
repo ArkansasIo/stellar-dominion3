@@ -3,7 +3,7 @@
 > **A Next-Generation 4X Space Strategy MMORPG**
 > Built with React 19, TypeScript, Express.js, PostgreSQL + Drizzle ORM
 >
-> **Legacy Foundation:** Xenobe Rage (2013) / Blacknova Traders (2001)
+> **Legacy Foundation:** Universe Empires
 > **Live Version:** Alpha 1.5.0
 
 ---
@@ -188,7 +188,7 @@ npm run check
 
 | Config File | Purpose | Key Parameters |
 |-------------|---------|---------------|
-| `classicGameConfig.ts` | 🎮 Classic game balance (Xenobe Rage) | Scheduler timing, universe size, economy prices, combat params, newbie settings, turn limits, device prices, bank rates, colonization rules, base costs, upgrade system, bounty system, federation rules, xenobe settings, facility requirements |
+| `classicGameConfig.ts` | 🎮 Classic game balance (Universe Empires) | Scheduler timing, universe size, economy prices, combat params, newbie settings, turn limits, device prices, bank rates, colonization rules, base costs, upgrade system, bounty system, federation rules, xenobe settings, facility requirements |
 | `gameConfig.ts` | 🎮 Game balance config | Core game balance parameters |
 | `turnSystemConfig.ts` | 🔄 Turn system | TURNS_PER_MINUTE: 6, TURN_INTERVAL_MS: 10000, MAX_OFFLINE_TURNS: 360, turn bonuses, research turn mechanics, event effects |
 | `combatConfig.ts` | ⚔️ Combat system | Damage formulas, armor penetration, critical rates, evasion |
@@ -372,7 +372,7 @@ npm run check
 | `research/TechTreeVisualization.tsx` | 🌲 Tech tree visualization |
 | `ui/*` (50+ components) | 🎨 Radix UI component library |
 
-### 🟣 XENOBE RAGE LEGACY — `/xenoberage/`
+### 🟣 UNIVERSE EMPIRES LEGACY — `/xenoberage/`
 
 | File | Purpose | Key Functions/Logic |
 |------|---------|-------------------|
@@ -450,7 +450,7 @@ npm run check
 📊 PROGRESSION SYSTEMS
 ├── 📈 Levels (1-999)       ─── shared/config/progressionSystem.ts
 ├── 📊 Tiers (1-99)         ─── shared/config/progressionSystemConfig.ts
-├ ⭐ Prestige System        ─── shared/schema.ts (playerStates.prestigeLevel, prestigeBonus)
+├── ⭐ Prestige System        ─── shared/schema.ts (playerStates.prestigeLevel, prestigeBonus)
 ├── 🏆 Achievements (200+)  ─── shared/config/achievementsConfig.ts
 ├── 📚 Knowledge (10 types) ─── route: /api/knowledge/*
 ├── 🎖️ Commander Skills     ─── shared/config/commanderSkillTreeSystem.ts
@@ -484,7 +484,7 @@ npm run check
 ├── 🏪 Market Orders        ─── shared/schema.ts (marketOrders table)
 ├── 🏛️ Auction House        ─── shared/schema.ts (auctionListings, auctionBids)
 ├── 💰 Currency System      ─── shared/config/currencyConfig.ts
-┆── 🤖 Auto-Buy Resources   ─── server/services/autoBuyResourcesService.ts
+├── 🤖 Auto-Buy Resources   ─── server/services/autoBuyResourcesService.ts
 └── 🔄 Trade Offers         ─── shared/schema.ts (tradeOffers, tradeHistory)
 ```
 
@@ -583,7 +583,7 @@ npm run check
 
 | Document | Location | Description |
 |----------|----------|-------------|
-| 🔄 Integration Plan | [docs/Xenoberage-Integration-Plan.md](docs/Xenoberage-Integration-Plan.md) | Xenobe Rage migration plan |
+| 🔄 Integration Plan | [docs/Xenoberage-Integration-Plan.md](docs/Xenoberage-Integration-Plan.md) | Universe Empires migration plan |
 | ✅ Migration Checklist | [docs/Xenoberage-Migration-Checklist.md](docs/Xenoberage-Migration-Checklist.md) | Migration tasks |
 | 🔐 Session Auth | [docs/Xenoberage-Session-Auth.md](docs/Xenoberage-Session-Auth.md) | Authentication design |
 | 📋 API Design | [docs/Xenoberage-API-Design.md](docs/Xenoberage-API-Design.md) | API design spec |
@@ -739,7 +739,7 @@ stellar-dominion3/
 │   ├── 📁 md-documents/     # Game design & architecture docs
 │   └── 📄 *.md              # Feature & system docs
 │
-├── 📁 xenoberage/           # Legacy PHP reference
+├── 📁 xenoberage/           # Universe Empires legacy reference
 │   ├── 📁 classes/          # PHP classes
 │   ├── 📁 includes/         # PHP includes
 │   ├── 📁 config/           # PHP configuration
@@ -759,8 +759,6 @@ stellar-dominion3/
 ├── 📄 Procfile              # Platform process file
 ├── 📄 .env.local            # Local environment variables
 └── 📄 STELLAR_DOMINION_UML_DESIGN.md  # Complete UML design doc
-```
-
 ---
 
 ## ⚡ Tech Stack
@@ -804,10 +802,10 @@ Dev Tools:
 ## 📜 License
 
 This project is licensed under the **AGPL v3** license.
-Based on Xenobe Rage © 2012-2013 David Dawson / Blacknova Traders © 2001-2012 Ron Harwood & BNT development team.
+Based on Universe Empires.
 
 ---
 
 *Document generated from source code analysis — 2026*
 *Repository: https://github.com/ArkansasIo/stellar-dominion3.git*
-*Xenobe Rage: https://github.com/ArkansasIo/xenoberage.git*
+*Universe Empires Legacy: https://github.com/ArkansasIo/xenoberage.git*
